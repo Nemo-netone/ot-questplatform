@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wjh.quest.dao.OptionMapper">
+    <select id="getOptions" resultType="com.wjh.quest.entity.Option">
+        SELECT * FROM `option` WHERE question_id = #{questionId} and survey_id = #{surveyId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO `option` (id, question_id, survey_id, content, create_time, option_id)
+        VALUES(null, #{questionId}, #{surveyId}, #{content}, now(), #{optionId})
+    </insert>
+
+    <delete id="deleteBySurveyId">
+        DELETE FROM `option` WHERE survey_id = #{surveyId}
+    </delete>
+</mapper>

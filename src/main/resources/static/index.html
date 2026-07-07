@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>主页 - 问卷管理平台</title>
+    <link rel="stylesheet" href="css/layui.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+<!-- 用户栏 -->
+<div class="user-bar">
+    <div class="user-container">
+        <div class="user-info">
+            <span id="username-display"></span>
+            <button id="auth-btn" class="btn auth-btn"></button>
+        </div>
+    </div>
+</div>
+
+<div class="app-container">
+    <!-- 左侧菜单 -->
+    <div class="sidebar">
+        <div class="menu-header">问卷管理平台</div>
+        <div class="menu-item active" data-type="0">
+            <i class="layui-icon layui-icon-form"></i>全部问卷
+        </div>
+        <div class="menu-item" data-type="1">
+            <i class="layui-icon layui-icon-delete"></i>回收站
+        </div>
+    </div>
+
+    <!-- 右侧内容 -->
+    <div class="main-content">
+        <div class="header-bar">
+            <h2>问卷列表</h2>
+            <button class="btn btn-primary" id="create-survey">
+                <i class="layui-icon">&#xe654;</i> 创建问卷
+            </button>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" class="input-control search-input" id="search-input" placeholder="输入问卷标题搜索...">
+            <button class="btn btn-success" id="search-btn">
+                <i class="layui-icon">&#xe615;</i> 搜索
+            </button>
+        </div>
+
+        <div class="survey-list" id="survey-list">
+            <div class="empty-state">
+                <i class="layui-icon layui-icon-loading"></i>
+                <p>加载中...</p>
+            </div>
+        </div>
+
+        <!-- 分页容器 -->
+        <div id="survey-pagination" class="pagination"></div>
+    </div>
+</div>
+
+<script src="layui.js"></script>
+<script src="./js/user.js"></script>
+<script>
+    layui.use(['jquery', 'layer', 'laypage', 'user'], function(){
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var laypage = layui.laypage;
+        var user = layui.user; // 引入 user 模块
+
+        // 初始化用户显示
+        user.initUserDisplay();
+        user.setupAuthButton();
+
+        // 查询参数
+        var isDelete = 0;
+        var title = '';
+        var currentPage = 1;
+        var pageSize = 5;
+        var totalCount = 0;
+
+        // 加载问卷列表
+        function loadSurveys() {
+            $('#survey-list').html(`
+                <div class="empty-state">
+                    <i class="layui-icon layui-icon-loading"></i>
+                    <p>加载中...</p>
+                </div>
+            `);
+
+            $.ajax({
+                url: '/survey/list',
+                type: 'GET',
+                data: {
+                    isDelete: isDelete,
+                    title: title,
+                    page: currentPage,
+                    pageSize: pageSize
+                },
+                success: function(res) {
+                    if (res.code === 200) {
+                        totalCount = res.data.total;
+                        renderSurveyList(res.data.list);
+                        renderPagination();
+                    } else {
+                        $('#survey-list').html(`
+                            <div class="empty-state">
+                                <i class="layui-icon layui-icon-close-fill"></i>
+                                <p>加载失败: ${res.msg}</p>
+                            </div>
+                        `);
+                    }
+                },
+                error: function() {
+                    $('#survey-list').html(`
+                        <div class="empty-state">
+                            <i class="layui-icon layui-icon-close-fill"></i>
+                            <p>网络错误，请稍后再试</p>
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        // 渲染问卷列表
+        function renderSurveyList(surveys) {
+            if (surveys.length === 0) {
+                $('#survey-list').html(`
+                    <div class="empty-state">
+                        <i class="layui-icon layui-icon-template-1"></i>
+                        <p>暂无数据</p>
+                    </div>
+                `);
+                return;
+            }
+
+            var html = '';
+            surveys.forEach(function(survey) {
+                const createTime = new Date(survey.createTime).toLocaleString('zh-CN', {timeZone: 'UTC'});
+
+                html += `
+                <div class="survey-item" data-id="${survey.id}" data-status="${survey.status}" data-count="${survey.count || 0}">
+                    <div style="display: flex; align-items: center;">
+                        ${survey.isDelete === 0 ? `
+                            <button class="status-btn ${survey.status === 0 ? 'status-active' : 'status-inactive'}">
+                                <i class="layui-icon ${survey.status === 0 ? 'layui-icon-play' : 'layui-icon-pause'}"></i>
+                            </button>` : ``}
+                        <span style="width: 15px;"></span>
+                    </div>
+                    <div class="survey-info">
+                        <div class="survey-title">${survey.title}</div>
+                        <div class="survey-meta">
+                            <span><i class="layui-icon layui-icon-time"></i> ${createTime}</span>
+                            <span><i class="layui-icon layui-icon-username"></i> ${survey.creator || '未知作者'}</span>
+                            <span><i class="layui-icon layui-icon-user"></i> ${survey.count || 0} 人参与</span>
+                        </div>
+                    </div>
+
+                    <div class="survey-actions">
+                        <button class="layui-btn layui-btn-xs view-answers-btn"
+                                data-count="${survey.count || 0}">
+                            <i class="layui-icon layui-icon-list"></i> 查看答卷
+                        </button>
+
+                        ${survey.isDelete === 0 ? `
+                            ${survey.status !== 0 ?
+                                `<button class="layui-btn btn-primary layui-btn-xs share-btn">
+                                    <i class="layui-icon layui-icon-share"></i> 分享
+                                </button>` :
+                                `<button class="layui-btn btn-success layui-btn-xs edit-btn">
+                                    <i class="layui-icon layui-icon-edit"></i> 编辑
+                                </button>`}
+
+                            <button class="layui-btn layui-bg-orange layui-btn-xs preview-btn">
+                                <i class="layui-icon layui-icon-search"></i>预览
+                            </button>
+
+                            <button class="layui-btn btn-danger layui-btn-xs delete-btn">
+                                <i class="layui-icon layui-icon-delete"></i> 删除
+                            </button>
+                            ` : `
+                            <button class="layui-btn btn-success layui-btn-xs restore-btn">
+                                <i class="layui-icon layui-icon-refresh"></i> 恢复
+                            </button>
+                        `}
+                    </div>
+                </div>
+                `;
+            });
+
+            $('#survey-list').html(html);
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            laypage.render({
+                theme: '#16b777',
+                elem: 'survey-pagination',
+                count: totalCount,
+                curr: currentPage,
+                limit: pageSize,
+                limits: [5, 10, 15, 20],
+                layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+                jump: function(obj, first) {
+                    if (!first) {
+                        currentPage = obj.curr;
+                        pageSize = obj.limit;
+                        loadSurveys();
+                    }
+                }
+            });
+        }
+
+        // 左侧菜单切换
+        $('.menu-item').on('click', function() {
+            $('.menu-item').removeClass('active');
+            $(this).addClass('active');
+            isDelete = $(this).data('type');
+            $('#search-input').val('');
+            title = '';
+            currentPage = 1;
+            loadSurveys();
+        });
+
+        // 搜索功能
+        $('#search-btn').on('click', function() {
+            title = $('#search-input').val();
+            currentPage = 1;
+            loadSurveys();
+        });
+
+        // 回车搜索
+        $('#search-input').on('keypress', function(e) {
+            if (e.which === 13) {
+                title = $(this).val();
+                currentPage = 1;
+                loadSurveys();
+            }
+        });
+
+        // 创建问卷
+        $('#create-survey').on('click', function() {
+            if (!user.checkLogin()) return;
+            window.location.href = '/page/survey_edit.html?type=insert';
+        });
+
+        // 预览问卷
+        $(document).on('click', '.preview-btn', function() {
+            if (!user.checkLogin()) return;
+            var surveyId = $(this).closest('.survey-item').data('id');
+            window.open(`/page/answer.html?id=${surveyId}&type=preview`);
+        });
+
+        // 编辑问卷
+        $(document).on('click', '.edit-btn', function() {
+            if (!user.checkLogin()) return;
+            var surveyId = $(this).closest('.survey-item').data('id');
+            window.location.href= `/page/survey_edit.html?id=${surveyId}&type=update`;
+        });
+
+        // 分享问卷
+        $(document).on('click', '.share-btn', function() {
+            var surveyId = $(this).closest('.survey-item').data('id');
+            var shareUrl = window.location.protocol + "//" + window.location.host + `/page/answer.html?id=${surveyId}`;
+
+            layer.open({
+                type: 1,
+                title: '分享问卷',
+                content: `
+                    <div style="padding:20px;">
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block; margin-bottom:8px; color:#4a5568;">分享链接</label>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <input type="text" class="input-control" value="${shareUrl}" readonly style="flex:1;">
+                                <button class="btn btn-primary" onclick="window.open('${shareUrl}')">
+                                    <i class="layui-icon layui-icon-link"></i>访问
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:8px; color:#4a5568;">二维码</label>
+                            <div style="text-align:center;">
+                                <img src="/api/qrcode?content=${encodeURIComponent(shareUrl)}"
+                                     style="width:200px; height:200px; border:1px solid #eee;">
+                                <p style="margin-top:10px; color:#718096;">扫描二维码填写问卷</p>
+                            </div>
+                        </div>
+                    </div>`,
+                area: ['650px', '500px'],
+                btn: ['关闭'],
+                btnAlign: 'c'
+            });
+        });
+
+        // 删除问卷
+        $(document).on('click', '.delete-btn', function() {
+            if (!user.checkLogin()) return;
+            var surveyId = $(this).closest('.survey-item').data('id');
+            var status = $(this).closest('.survey-item').data('status');
+            if (status === 1) {
+                layer.confirm('开始的问卷不可删除!', {
+                    icon: 3,
+                    title: '提示',
+                    btn: ['确定','取消']
+                });
+            } else {
+                layer.confirm('确定要删除此问卷吗？删除后可在回收站恢复', {
+                    icon: 3,
+                    title: '提示',
+                    btn: ['确定','取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/survey/remove/',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            username: localStorage.getItem('username'),
+                            surveyId: surveyId
+                        }),
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg(res.msg, {icon: 1});
+                                loadSurveys();
+                            } else {
+                                layer.msg('操作失败: ' + res.msg, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('网络错误，请稍后再试', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+        });
+
+        // 恢复问卷
+        $(document).on('click', '.restore-btn', function() {
+            if (!user.checkLogin()) return;
+            var surveyId = $(this).closest('.survey-item').data('id');
+            layer.confirm('确定要恢复此问卷吗？', {
+                icon: 3,
+                title: '提示',
+                btn: ['确定','取消']
+            }, function(index) {
+                $.ajax({
+                    url: '/survey/restore/',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        username: localStorage.getItem('username'),
+                        surveyId: surveyId
+                    }),
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg(res.msg, {icon: 1});
+                            loadSurveys();
+                        } else {
+                            layer.msg('操作失败: ' + res.msg, {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('网络错误，请稍后再试', {icon: 2});
+                    }
+                });
+                layer.close(index);
+            });
+        });
+
+        // 操作问卷状态
+        $(document).on('click', '.status-btn', function() {
+            if (!user.checkLogin()) return;
+            var surveyId = $(this).closest('.survey-item').data('id');
+            var status = $(this).closest('.survey-item').data('status');
+            var msg = status === 1 ? '确定要停止此问卷吗？' : '确定要开启此问卷吗？';
+
+            layer.confirm(msg, {
+                icon: 3,
+                title: '提示',
+                btn: ['确定','取消']
+            }, function(index) {
+                $.ajax({
+                    url: '/survey/updateStatus',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        username: localStorage.getItem('username'),
+                        surveyId: surveyId,
+                        status: status === 0 ? 1 : 0,
+                    }),
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg(res.msg, {icon: 1});
+                            loadSurveys();
+                        } else {
+                            layer.msg('操作失败: ' + res.msg, {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('网络错误，请稍后再试', {icon: 2});
+                    }
+                });
+                layer.close(index);
+            });
+        });
+
+        // 查看答卷
+        $(document).on('click', '.view-answers-btn', function() {
+            if (!user.checkLogin()) return;
+            const surveyItem = $(this).closest('.survey-item');
+            const answerCount = surveyItem.data('count') || 0;
+
+            if (answerCount === 0) {
+                layer.msg('该问卷暂无答卷数据', {icon: 0});
+                return;
+            }
+
+            const surveyId = surveyItem.data('id');
+            window.location.href = `page/answer_table.html?surveyId=${surveyId}`;
+        });
+
+        // 初始化加载
+        loadSurveys();
+    });
+</script>
+</body>
+</html>

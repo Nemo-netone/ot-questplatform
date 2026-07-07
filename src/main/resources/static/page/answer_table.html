@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>答卷数据 - 问卷管理平台</title>
+    <link rel="stylesheet" href="../css/layui.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/answer_table.css">
+
+</head>
+<body>
+<div class="app-container">
+    <div class="main-content">
+        <div class="answer-container card">
+            <div class="answer-header">
+                <h2>答卷数据</h2>
+                <div class="action-buttons">
+                    <button class="btn btn-danger" id="back-btn">
+                        <i class="layui-icon layui-icon-left"></i> 返回
+                    </button>
+                </div>
+            </div>
+
+            <!-- 答卷表格 -->
+            <div class="layui-table-box" style="margin-top: 15px;">
+                <div id="answer-table" lay-filter="answer-table"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 回答详情弹窗模板 -->
+<script type="text/html" id="answer-detail-tpl">
+    <div class="answer-detail-card">
+        <table class="detail-table">
+            <thead>
+            <tr>
+                <th>问题</th>
+                <th>回答</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{# layui.each(d.answers, function(index, item){ }}
+            <tr>
+                <td>{{ item.question || '问题'+(index+1) }}</td>
+                <td>{{ item.answer || '未回答' }}</td>
+            </tr>
+            {{# }); }}
+            </tbody>
+        </table>
+    </div>
+</script>
+
+<script src="../layui.js"></script>
+<script src="../js/user.js"></script>
+<script>
+    layui.use(['table', 'jquery', 'layer', 'user'], function(){
+        var table = layui.table;
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var user = layui.user;
+        var laytpl = layui.laytpl;
+
+        // 初始化用户显示
+        user.initUserDisplay();
+        user.setupAuthButton();
+
+        // 从URL获取surveyId
+        function getSurveyIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('surveyId');
+        }
+
+        var surveyId = getSurveyIdFromUrl();
+
+        // 解析回答数据（简化版，假设已经是标准JSON格式）
+        function parseAnswers(answerStr) {
+            try {
+                return JSON.parse(answerStr);
+            } catch (e) {
+                console.error('解析回答数据失败:', e);
+                return [];
+            }
+        }
+
+        // 初始化表格
+        table.render({
+            elem: '#answer-table',
+            url: '/answer/list',
+            where: {
+                surveyId: surveyId,
+                username: localStorage.getItem('username')
+            },
+            method: 'post',
+            contentType: 'application/json',
+            parseData: function(res){
+                if(res.code !== 200) {
+                    layer.msg(res.msg || '加载问卷数据失败', {icon: 2});
+                    return {
+                        "code": res.code,
+                        "msg": res.msg,
+                        "count": 0,
+                        "data": []
+                    };
+                }
+                return {
+                    "code": res.code,
+                    "msg": res.msg,
+                    "count": res.data.total,
+                    "data": res.data.list
+                };
+            },
+            request: {
+                pageName: 'pageNum',
+                limitName: 'pageSize'
+            },
+            response: {
+                statusName: 'code',
+                statusCode: 200,
+                countName: 'count',
+                dataName: 'data'
+            },
+            cols: [[
+                {field: 'id', title: 'ID'},
+                {field: 'sourceType', title: '来源类型', templet: function(d){
+                        return d.sourceType === 1 ? '手机' : '电脑';
+                    }},
+                {field: 'sourceIp', title: 'IP地址'},
+                {field: 'createTime', title: '提交时间', templet: function(d){
+                        return d.createTime ? new Date(d.createTime).toLocaleString() : '未知时间';
+                    }},
+                {title: '操作', align: 'center', toolbar: '#answer-detail-btn'}
+            ]],
+            page: true,
+            limits: [5, 10, 15, 20],
+            limit: 10
+        });
+
+        // 监听工具条
+        table.on('tool(answer-table)', function(obj){
+            var data = obj.data;
+
+            if(obj.event === 'detail'){
+                // 解析回答数据
+                var answers = parseAnswers(data.answer);
+
+                // 渲染弹窗内容
+                var getTpl = document.getElementById('answer-detail-tpl').innerHTML;
+
+                laytpl(getTpl).render({
+                    id: data.id,
+                    sourceIp: data.sourceIp,
+                    createTime: data.createTime,
+                    answers: answers
+                }, function(html){
+                    layer.open({
+                        type: 1,
+                        title: '回答详情',
+                        area: ['800px', '600px'],
+                        // skin: 'answer-detail-modal',
+                        content: html,
+                        btn: ['关闭'],
+                        success: function(res, index){
+                            // 弹窗成功回调
+                        }
+                    });
+                });
+            }
+        });
+
+        // 返回按钮
+        $('#back-btn').on('click', function() {
+            window.location.href = '/index.html';
+        });
+    });
+</script>
+
+<!-- 表格操作按钮模板 -->
+<script type="text/html" id="answer-detail-btn">
+    <a class="layui-btn layui-btn-xs" lay-event="detail">查看详情</a>
+</script>
+</body>
+</html>

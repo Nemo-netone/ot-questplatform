@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wjh.quest.dao.SurveyMapper">
+    <select id="get" resultType="com.wjh.quest.entity.Survey">
+        select * from survey
+        <where>
+            <if test="title != null and title != ''">
+                and title like concat('%',#{title},'%')
+            </if>
+            and is_delete = #{isDelete}
+        </where>
+        order by status desc, create_time desc
+    </select>
+
+    <update id="updateStatus">
+        UPDATE survey SET status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateTitle">
+        UPDATE survey SET title = #{title}
+        WHERE id = #{id}
+    </update>
+
+    <update id="removeById">
+        update survey set is_delete = 1 where id = #{id}
+    </update>
+
+    <select id="getStatus" resultType="int">
+        select status from survey where id = #{id}
+    </select>
+
+    <update id="restoreById">
+        update survey set is_delete = 0 where id = #{id}
+    </update>
+
+    <select id="getById" resultType="com.wjh.quest.entity.Survey">
+        SELECT * FROM survey WHERE id = #{id} and is_delete = 0
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO survey (id, title, status, create_time, creator, is_delete)
+        VALUES(null, #{title}, 0, now(), #{creator}, 0);
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM survey WHERE id = #{id}
+    </delete>
+</mapper>

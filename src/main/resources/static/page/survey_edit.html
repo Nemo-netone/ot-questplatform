@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>问卷构建 - 问卷管理平台</title>
+    <link rel="stylesheet" href="../css/layui.css">
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/survey_edit.css">
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2>问卷构建</h2>
+        </div>
+        <div class="card-body">
+            <div class="survey-editor">
+                <!-- 组件面板 -->
+                <div class="component-panel card">
+                    <h3 class="component-title">组件列表</h3>
+                    <div class="draggable-item" draggable="true" data-type="text">
+                        <i class="layui-icon layui-icon-edit"></i> 文本输入框
+                    </div>
+                    <div class="draggable-item" draggable="true" data-type="textarea">
+                        <i class="layui-icon layui-icon-list"></i> 多行文本
+                    </div>
+                    <div class="draggable-item" draggable="true" data-type="select">
+                        <i class="layui-icon layui-icon-down"></i> 下拉选择
+                    </div>
+                    <div class="draggable-item" draggable="true" data-type="radio">
+                        <i class="layui-icon layui-icon-circle"></i> 单选框
+                    </div>
+                    <div class="draggable-item" draggable="true" data-type="checkbox">
+                        <i class="layui-icon layui-icon-radio"></i> 复选框
+                    </div>
+                </div>
+
+                <!-- 表单构建区 -->
+                <div class="form-builder card" id="formBuilder">
+                    <div class="form-title-container">
+                        <input type="text" class="input-control form-title" placeholder="请输入问卷标题">
+                    </div>
+                    <div class="empty-state">拖拽组件到这里构建问卷</div>
+                </div>
+            </div>
+
+            <div class="text-center mt-20">
+                <button class="btn btn-danger" onclick="window.location.href = '/index.html'">
+                    <i class="layui-icon layui-icon-close"></i> 关闭
+                </button>
+                <button class="btn btn-success" onclick="submitForm()">
+                    <i class="layui-icon layui-icon-ok"></i> 生成
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../layui.js"></script>
+<script src="../js/user.js"></script>
+<script>
+    layui.use(['jquery', 'layer', 'form', 'user'], function(){
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var user = layui.user;
+
+        var builder = document.getElementById('formBuilder');
+        var username = localStorage.getItem('username');
+        var surveyId = getQueryParam('id');
+        var type = getQueryParam('type') ? getQueryParam('type') : 'insert';
+
+        // 检查登录状态
+        if (!user.checkLogin()) return;
+
+
+        // 拖拽功能
+        document.querySelectorAll('.draggable-item').forEach(item => {
+            item.addEventListener('dragstart', e => {
+                e.dataTransfer.setData('type', item.dataset.type);
+            });
+        });
+
+        builder.addEventListener('dragover', e => {
+            e.preventDefault();
+            builder.style.backgroundColor = '#f8f8f8';
+        });
+
+        builder.addEventListener('dragleave', () => {
+            builder.style.backgroundColor = '#fff';
+        });
+
+        builder.addEventListener('drop', function (e) {
+            e.preventDefault();
+            builder.style.backgroundColor = '#fff';
+
+            const placeholder = builder.querySelector('.empty-state');
+            if (placeholder) placeholder.remove();
+
+            const type = e.dataTransfer.getData('type');
+            addFormItem(type);
+        });
+
+        // 添加表单项
+        function addFormItem(type, title, options) {
+            const formItem = document.createElement('div');
+            formItem.className = 'card form-item-wrapper';
+
+            let innerHTML = `<i class="layui-icon layui-icon-close delete-btn" onclick="this.parentNode.remove()"></i>`;
+            innerHTML += `<input type="text" class="input-control title-input" placeholder="请输入标题" value="${title || ''}">`;
+
+            if (type === 'text') {
+                innerHTML += `<input type="text" class="input-control" disabled>`;
+            } else if (type === 'textarea') {
+                innerHTML += `<textarea class="layui-textarea" rows="3" disabled></textarea>`;
+            } else {
+                innerHTML += `<div class="options-container" data-type="${type}">`;
+
+                if (options && options.length > 0) {
+                    options.forEach(option => {
+                        if (type === 'select') {
+                            innerHTML += `
+                                <div class="option-group">
+                                    <input type="text" class="input-control" placeholder="请输入选项" value="${option.content || ''}">
+                                    <span class="delete-option-btn" onclick="this.parentNode.remove()">
+                                        <i class="layui-icon layui-icon-close"></i>
+                                    </span>
+                                </div>`;
+                        } else if (type === 'radio') {
+                            const randomName = `radio_${Date.now()}`;
+                            innerHTML += `
+                                <div class="option-group">
+                                    <input type="radio" name="${randomName}" title="选项" disabled>
+                                    <input type="text" class="input-control" placeholder="请输入选项" value="${option.content || ''}">
+                                    <span class="delete-option-btn" onclick="this.parentNode.remove()">
+                                        <i class="layui-icon layui-icon-close"></i>
+                                    </span>
+                                </div>`;
+                        } else if (type === 'checkbox') {
+                            innerHTML += `
+                                <div class="option-group">
+                                    <input type="checkbox" title="选项" disabled>
+                                    <input type="text" class="input-control" placeholder="请输入选项" value="${option.content || ''}">
+                                    <span class="delete-option-btn" onclick="this.parentNode.remove()">
+                                        <i class="layui-icon layui-icon-close"></i>
+                                    </span>
+                                </div>`;
+                        }
+                    });
+                } else {
+                    if (type === 'select') {
+                        innerHTML += `
+                            <div class="option-group">
+                                <input type="text" class="input-control" placeholder="请输入选项">
+                                <span class="delete-option-btn" onclick="this.parentNode.remove()">
+                                    <i class="layui-icon layui-icon-close"></i>
+                                </span>
+                            </div>`;
+                    } else if (type === 'radio') {
+                        const randomName = `radio_${Date.now()}`;
+                        innerHTML += `
+                            <div class="option-group">
+                                <input type="radio" name="${randomName}" title="选项" disabled>
+                                <input type="text" class="input-control" placeholder="请输入选项">
+                                <span class="delete-option-btn" onclick="this.parentNode.remove()">
+                                    <i class="layui-icon layui-icon-close"></i>
+                                </span>
+                            </div>`;
+                    } else if (type === 'checkbox') {
+                        innerHTML += `
+                            <div class="option-group">
+                                <input type="checkbox" title="选项" disabled>
+                                <input type="text" class="input-control" placeholder="请输入选项">
+                                <span class="delete-option-btn" onclick="this.parentNode.remove()">
+                                    <i class="layui-icon layui-icon-close"></i>
+                                </span>
+                            </div>`;
+                    }
+                }
+
+                innerHTML += `</div>`;
+                innerHTML += `<button type="button" class="btn btn-primary add-option-btn">
+                        <i class="layui-icon layui-icon-add-1"></i> 添加选项
+                     </button>`;
+            }
+
+            formItem.innerHTML = innerHTML;
+            builder.appendChild(formItem);
+
+            // 添加选项按钮事件
+            const btn = formItem.querySelector('.add-option-btn');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    const container = this.previousElementSibling;
+                    const optType = container.dataset.type;
+                    const optDiv = document.createElement('div');
+                    optDiv.className = 'option-group';
+
+                    const randomName = `radio_${Date.now()}`;
+
+                    if (optType === 'select') {
+                        optDiv.innerHTML = `
+                            <input type="text" class="input-control" placeholder="请输入选项">
+                            <span class="delete-option-btn" onclick="this.parentNode.remove()">
+                                <i class="layui-icon layui-icon-close"></i>
+                            </span>`;
+                    } else if (optType === 'radio') {
+                        optDiv.innerHTML = `
+                            <input type="radio" name="${randomName}" title="选项" disabled>
+                            <input type="text" class="input-control" placeholder="请输入选项">
+                            <span class="delete-option-btn" onclick="this.parentNode.remove()">
+                                <i class="layui-icon layui-icon-close"></i>
+                            </span>`;
+                    } else if (optType === 'checkbox') {
+                        optDiv.innerHTML = `
+                            <input type="checkbox" title="选项" disabled>
+                            <input type="text" class="input-control" placeholder="请输入选项">
+                            <span class="delete-option-btn" onclick="this.parentNode.remove()">
+                                <i class="layui-icon layui-icon-close"></i>
+                            </span>`;
+                    }
+
+                    container.appendChild(optDiv);
+                    form.render();
+                });
+            }
+
+            form.render();
+        }
+
+        // 加载问卷数据
+        function loadSurveyData(id) {
+            layer.load(1);
+            var url = "/survey/" + id + "/" + type;
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(res) {
+                    layer.closeAll('loading');
+                    if(res) {
+                        if(res.code === 200) {
+                            var data = res.data;
+                            $('.form-title').val(data.title || '未命名问卷');
+
+                            const placeholder = builder.querySelector('.empty-state');
+                            if (placeholder) placeholder.remove();
+
+                            if(data.questions && data.questions.length > 0) {
+                                data.questions.forEach(question => {
+                                    addFormItem(question.type, question.title, question.options);
+                                });
+                            }
+
+                            type = 'update';
+
+                            $('title').text("问卷修改 - 问卷调研平台");
+                            $('.card-header h2').text('问卷修改');
+                            $('.btn-success').html('<i class="layui-icon layui-icon-ok"></i> 修改');
+
+                        } else {
+                            type = 'insert';
+                            layer.msg(res.msg || '加载问卷数据失败', {icon: 2});
+                        }
+                    } else {
+                        layer.msg(res.msg || '加载问卷数据失败', {icon: 2});
+                    }
+                },
+                error: function() {
+                    layer.closeAll('loading');
+                    layer.msg('加载问卷数据失败', {icon: 2});
+                }
+            });
+        }
+
+        // 获取URL参数
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 提交表单
+        window.submitForm = function() {
+            const formTitle = $('.form-title').val() || '未命名问卷';
+            const items = $('#formBuilder .form-item-wrapper');
+            let message = '创建';
+
+            if(items.length === 0) {
+                layer.msg('请先添加问卷组件', {icon: 2});
+                return;
+            }
+
+            const formJson = {
+                formTitle: formTitle,
+                fields: []
+            };
+
+            if(type === 'update') {
+                formJson.id = surveyId;
+                message = '更新';
+            }
+
+            items.each(function() {
+                const title = $(this).find('.title-input').val() || '未命名字段';
+                const type = $(this).find('.options-container').data('type') ||
+                    ($(this).find('textarea').length ? 'textarea' : 'text');
+
+                let options = [];
+                $(this).find('.option-group').each(function() {
+                    const text = $(this).find('input[type="text"]').val();
+                    if(text && text.trim()) {
+                        options.push(text.trim());
+                    }
+                });
+
+                formJson.fields.push({
+                    type: type,
+                    title: title,
+                    options: options.length > 0 ? options : undefined
+                });
+            });
+
+            layer.confirm('确定要' + message + '问卷吗？', {
+                icon: 3,
+                title: '提示'
+            }, function(index) {
+                $.ajax({
+                    url: '/survey/edit',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        username: username,
+                        type: type,
+                        ...formJson
+                    }),
+                    success: function(res) {
+                        layer.close(index);
+                        if(res.code === 200) {
+                            layer.msg('问卷' + message + '成功', {icon: 1});
+                            setTimeout(function(){
+                                window.location.href = '/index.html';
+                            }, 1000);
+                        } else {
+                            layer.msg(res.msg || '问卷' + message + '失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.close(index);
+                        layer.msg('网络错误，请稍后再试', {icon: 2});
+                    }
+                });
+            });
+        }
+
+        // 如果type==='update'，则加载问卷数据
+        if(type === 'update') {
+            loadSurveyData(surveyId);
+        }
+    });
+</script>
+</body>
+</html>

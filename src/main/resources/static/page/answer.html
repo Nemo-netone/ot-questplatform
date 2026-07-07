@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>问卷回答 - 问卷调研平台</title>
+    <link rel="stylesheet" href="../css/layui.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/answer.css">
+</head>
+<body>
+<div class="container answer-container">
+    <div class="form-title" id="survey-title">加载中...</div>
+
+    <div class="layui-form" lay-filter="quest-form" id="survey-form">
+        <div class="card loading-card">
+            <div class="loading-text">
+                <i class="layui-icon layui-icon-loading layui-anim layui-anim-rotate"></i> 问卷加载中...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../layui.js"></script>
+<script>
+    layui.use(['form', 'jquery', 'layer'], function () {
+        var form = layui.form;
+        var $ = layui.jquery;
+        var layer = layui.layer;
+
+        var surveyId = getQueryParam('id');
+        var type = getQueryParam('type') ? getQueryParam('type') : 'answer';
+
+        // 从URL获取参数
+        function getQueryParam(name) {
+            var urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 加载问卷数据
+        function loadSurveyData(surveyId) {
+            var url = "/survey/" + surveyId + "/" + type;
+            $.ajax({
+                url: url,
+                type: "GET",
+                dataType: "json",
+                success: function(response) {
+                    if (response.code === 200) {
+                        renderSurvey(response.data);
+                    } else {
+                        layer.confirm('加载问卷失败: ' + response.msg + ' 是否关闭页面', {
+                            icon: 3,
+                            title: '提示',
+                            btn: ['确定','取消']
+                        },function() {
+                            window.close();
+                        });
+                    }
+                },
+                error: function() {
+                    layer.msg('网络错误，请稍后再试', {icon: 2});
+                }
+            });
+        }
+
+        // 渲染问卷
+        function renderSurvey(surveyData) {
+            $('#survey-title').text(surveyData.title);
+
+            var formHtml = '';
+            var answerData = {};
+
+            // 根据问题类型渲染不同的表单元素
+            surveyData.questions.forEach(function(question, index) {
+                answerData['q' + question.id] = '';
+
+                formHtml += '<div class="card form-item">';
+                formHtml += '<label class="form-item-label">' + (index + 1) + '. ' + question.title + '</label>';
+                formHtml += '<div class="layui-input-block">';
+
+                switch(question.type) {
+                    case 'select':
+                        formHtml += '<select name="q' + question.id + '" lay-filter="question-select">';
+                        question.options.forEach(function(option) {
+                            formHtml += '<option value="' + option.optionId + '">' + option.content + '</option>';
+                        });
+                        formHtml += '</select>';
+                        break;
+
+                    case 'radio':
+                        question.options.forEach(function(option) {
+                            formHtml += '<input type="radio" name="q' + question.id + '" value="' + option.optionId + '" title="' + option.content + '">';
+                        });
+                        break;
+
+                    case 'checkbox':
+                        question.options.forEach(function(option) {
+                            formHtml += '<input type="checkbox" name="q' + question.id + '[]" lay-skin="primary" value="' + option.optionId + '" title="' + option.content + '">';
+                        });
+                        break;
+
+                    case 'textarea':
+                        formHtml += '<textarea name="q' + question.id + '" placeholder="请输入您的回答" class="layui-textarea"></textarea>';
+                        break;
+
+                    case 'text':
+                        formHtml += '<input name="q' + question.id + '" placeholder="请输入您的回答" class="input-control">';
+                        break;
+                }
+
+                formHtml += '</div></div>';
+            });
+
+            formHtml += '<div class="text-center mt-20">';
+            formHtml += '<button id="btn-close" class="btn btn-danger" onclick="window.close()">';
+            formHtml += '<i class="layui-icon">&#x1006;</i> 关闭';
+            formHtml += '</button>';
+            formHtml += '<span>  </span>';
+
+            if (type === 'answer') {
+                formHtml += '<button id="btn-submit" class="btn btn-success" lay-submit lay-filter="*">';
+                formHtml += '<i class="layui-icon">&#xe605;</i> 提交';
+                formHtml += '</button>';
+            }
+            formHtml += '</div>';
+
+            $('#survey-form').html(formHtml);
+
+            if (type === 'preview') {
+                $('textarea').prop('disabled', true).attr('placeholder', '预览模式下不可输入');
+                $('input').prop('disabled', true).attr('placeholder', '预览模式下不可输入');
+                $('title').text("问卷预览 - 问卷调研平台");
+            }
+
+            form.render();
+
+            form.on('submit(*)', function(data) {
+                var answers = [];
+
+                surveyData.questions.forEach(function(question) {
+                    var fieldName = 'q' + question.id;
+                    var answerValue = '';
+
+                    if (question.type === 'checkbox') {
+                        var checkedContents = [];
+                        $('input[name="' + fieldName + '[]"]:checked').each(function() {
+                            var optionId = $(this).val();
+                            var option = question.options.find(opt => opt.optionId == optionId);
+                            if (option) {
+                                checkedContents.push(option.content);
+                            }
+                        });
+                        answerValue = checkedContents.join(',');
+                    }
+                    else if (question.type === 'radio' || question.type === 'select') {
+                        var selectedId = data.field[fieldName];
+                        if (selectedId) {
+                            var option = question.options.find(opt => opt.optionId == selectedId);
+                            if (option) {
+                                answerValue = option.content;
+                            }
+                        }
+                    }
+                    else { // text or textarea
+                        answerValue = data.field[fieldName] || '';
+                    }
+
+                    answers.push({
+                        question: question.title,
+                        answer: answerValue
+                    });
+                });
+
+                var hasAnswer = answers.some(function(item) {
+                    return item.answer !== '';
+                });
+
+                if (!hasAnswer) {
+                    layer.msg('请至少回答一个问题', {icon: 2});
+                    return false;
+                }
+
+                $.ajax({
+                    url: "/answer/add",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        surveyId: surveyId,
+                        sourceType: 2,
+                        sourceIp: "127.0.0.1",
+                        answers: JSON.stringify(answers)
+                    }),
+                    success: function(response) {
+                        if (response.code === 200) {
+                            layer.msg('提交成功', {
+                                icon: 1,
+                                time: 2000
+                            }, function() {
+                                setTimeout(function(){
+                                    window.location.href = '/page/thank.html';
+                                }, 100);
+                            });
+                        } else {
+                            layer.msg('提交失败: ' + response.msg, {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('网络错误，请稍后再试', {icon: 2});
+                    }
+                });
+
+                return false;
+            });
+
+        }
+
+        // 初始化
+        loadSurveyData(surveyId);
+    });
+</script>
+</body>
+</html>

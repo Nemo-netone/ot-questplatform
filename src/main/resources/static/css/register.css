@@ -1,0 +1,45 @@
+/* 注册页专用样式 - 基本与登录页相同 */
+.register-container {
+    max-width: 400px;
+    margin: 50px auto;
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.register-header {
+    background-color: #2f4050;
+    color: var(--white);
+    padding: 25px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 500;
+}
+
+.register-body {
+    padding: 30px;
+}
+
+.register-footer {
+    text-align: center;
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+    color: var(--secondary-color);
+}
+
+.register-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.register-footer a:hover {
+    text-decoration: underline;
+}
+
+.error-message {
+    color: var(--danger-color);
+    font-size: 14px;
+    margin-top: 5px;
+    display: none;
+}

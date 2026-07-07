@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wjh.quest.dao.UserMapper">
+    <select id="login" resultType="com.wjh.quest.entity.User">
+        select * from user where username = #{username} and password = #{password}
+    </select>
+
+    <select id="findByUsername" resultType="com.wjh.quest.entity.User">
+        select * from user where username = #{username}
+    </select>
+
+    <insert id="register">
+        INSERT INTO user(id, username, password, phone, status)
+        VALUES(null, #{username}, #{password}, #{phone}, 0);
+    </insert>
+</mapper>

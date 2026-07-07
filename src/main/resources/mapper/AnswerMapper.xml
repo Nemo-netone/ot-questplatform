@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wjh.quest.dao.AnswerMapper">
+    <select id="getCountBySurveyId" resultType="int">
+        select count(*) count from answer where survey_id = #{surveyId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO answer (id, source_type, source_ip, answer, survey_id, create_time)
+        VALUES(null, #{sourceType}, #{sourceIp}, #{answer}, #{surveyId}, now())
+    </insert>
+
+    <select id="list" resultType="com.wjh.quest.entity.Answer">
+        select * from answer where survey_id = #{surveyId}
+    </select>
+</mapper>

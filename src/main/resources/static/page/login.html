@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>登录 - 问卷管理平台</title>
+    <link rel="stylesheet" href="../css/layui.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
+<div class="login-container">
+    <div class="login-header">问卷管理平台登录</div>
+    <div class="login-body">
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" class="input-control" placeholder="请输入用户名">
+                <div id="usernameError" class="error-message"></div>
+            </div>
+            <div class="input-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" class="input-control" placeholder="请输入密码">
+                <div id="passwordError" class="error-message"></div>
+            </div>
+            <br>
+            <div class="text-center mt-20">
+                <button type="button" id="loginBtn" class="btn btn-primary">登录</button>
+            </div>
+        </form>
+    </div>
+    <div class="login-footer">
+        还没有账号？<a href="/page/register.html">立即注册</a>
+    </div>
+</div>
+
+<script src="../layui.js"></script>
+<script>
+    layui.use(['jquery', 'layer'], function(){
+        var $ = layui.jquery;
+        var layer = layui.layer;
+
+        // 登录按钮点击事件
+        $('#loginBtn').on('click', function() {
+            var username = $('#username').val().trim();
+            var password = $('#password').val().trim();
+
+            // 验证输入
+            if (!username) {
+                $('#usernameError').text('请输入用户名').show();
+                return;
+            } else {
+                $('#usernameError').hide();
+            }
+
+            if (!password) {
+                $('#passwordError').text('请输入密码').show();
+                return;
+            } else {
+                $('#passwordError').hide();
+            }
+
+            // 显示加载中
+            var loadIndex = layer.load(1, {
+                shade: [0.1, '#fff']
+            });
+
+            // 发送登录请求
+            $.ajax({
+                url: '/user/login',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    username: username,
+                    password: password
+                }),
+                success: function(res) {
+                    layer.close(loadIndex);
+                    if (res.code === 200) {
+                        layer.msg('登录成功', {icon: 1});
+                        // 存储token到本地
+                        localStorage.setItem('username', res.data.username);
+                        // 跳转到首页
+                        setTimeout(function() {
+                            window.location.href = '/index.html';
+                        }, 1000);
+                    } else {
+                        layer.msg(res.msg || '登录失败', {icon: 2});
+                    }
+                },
+                error: function() {
+                    layer.close(loadIndex);
+                    layer.msg('网络错误，请稍后再试', {icon: 2});
+                }
+            });
+        });
+
+        // 回车登录
+        $('#password').on('keypress', function(e) {
+            if (e.which === 13) {
+                $('#loginBtn').click();
+            }
+        });
+    });
+</script>
+</body>
+</html>

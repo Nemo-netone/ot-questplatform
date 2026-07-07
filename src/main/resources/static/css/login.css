@@ -1,0 +1,45 @@
+/* 登录页专用样式 */
+.login-container {
+    max-width: 400px;
+    margin: 50px auto;
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-header {
+    background-color: #2f4050;
+    color: var(--white);
+    padding: 25px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 500;
+}
+
+.login-body {
+    padding: 30px;
+}
+
+.login-footer {
+    text-align: center;
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+    color: var(--secondary-color);
+}
+
+.login-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+.error-message {
+    color: var(--danger-color);
+    font-size: 14px;
+    margin-top: 5px;
+    display: none;
+}
