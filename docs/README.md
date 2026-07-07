@@ -35,6 +35,7 @@
 | 6 | [conventions.md](conventions.md) | 可检查的编码和文档规范 |
 | 7 | [mvp-plan.md](mvp-plan.md) | 里程碑、PR 映射、风险 |
 | 8 | [database/quest-platform.sql](database/quest-platform.sql) | MySQL 初始化脚本 |
+| 9 | [deployment.md](deployment.md) | Cloudflare Pages 静态预览部署策略 |
 
 ## 关键术语
 

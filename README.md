@@ -159,6 +159,19 @@ http://localhost:8080/index.html
 | `mvn clean package -DskipTests` | 打包可执行 jar |
 | `mvn spring-boot:run` | 本地启动服务 |
 
+## Cloudflare Pages 静态预览
+
+本项目可以把 `src/main/resources/static` 发布到 Cloudflare Pages，作为静态页面预览。固定发布目标如下：
+
+| 项目 | 值 |
+|------|----|
+| Pages 项目名 | `ot-questplatform` |
+| 生产分支 | `main` |
+| 发布目录 | `src/main/resources/static` |
+| 默认地址 | `https://ot-questplatform.pages.dev` |
+
+注意：Cloudflare Pages 只托管静态 HTML/CSS/JS，不运行 Spring Boot API。完整业务流程仍需要单独运行 Java 后端、MySQL 和 Redis。部署细节见 [docs/deployment.md](docs/deployment.md)。
+
 ## 配置与密钥策略
 
 `application.yml` 使用环境变量读取敏感配置：
@@ -187,6 +200,7 @@ http://localhost:8080/index.html
 6. [docs/05-interfaces.md](docs/05-interfaces.md)
 7. [docs/conventions.md](docs/conventions.md)
 8. [docs/mvp-plan.md](docs/mvp-plan.md)
+9. [docs/deployment.md](docs/deployment.md)
 
 ## 当前边界
 
