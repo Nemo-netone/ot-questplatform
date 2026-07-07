@@ -11,7 +11,10 @@
 | Pages 项目名 | `ot-questplatform` |
 | 生产分支 | `main` |
 | 发布目录 | `src/main/resources/static` |
-| 目标默认地址 | `https://ot-questplatform.pages.dev` |
+| 已发布地址 | `https://ot-questplatform.pages.dev` |
+| 当前生产部署 | `https://a179036d.ot-questplatform.pages.dev` |
+| 当前部署提交 | `e8952e9c303028bf6a8c8a91e1980ae2917e2a2f` |
+| 部署时间 | 2026-07-07 |
 
 固定地址的关键是：后续不要创建新的 Pages 项目，继续部署到同一个 `ot-questplatform` Pages 项目。Cloudflare Pages 的默认域名由项目名决定，同一个项目重复部署后地址保持不变。
 
@@ -19,11 +22,9 @@
 
 Cloudflare Pages 发布后可以打开静态页面，例如：
 
-```text
-https://ot-questplatform.pages.dev/index.html
-https://ot-questplatform.pages.dev/page/login.html
-https://ot-questplatform.pages.dev/page/answer.html
-```
+- `https://ot-questplatform.pages.dev/index.html`
+- `https://ot-questplatform.pages.dev/page/login.html`
+- `https://ot-questplatform.pages.dev/page/answer.html`
 
 但这些页面仍会调用相对路径 API，例如 `/user/login`、`/survey/list`、`/answer/add`。如果没有把 Spring Boot API 部署到同域名、反向代理或独立后端域名，页面能打开，但业务接口不会完整工作。
 

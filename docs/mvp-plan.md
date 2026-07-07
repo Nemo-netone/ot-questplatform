@@ -59,10 +59,10 @@ Out：
 ### M3 · 展示增强
 
 - [x] 增加 Cloudflare Pages 静态预览部署说明。
+- [x] 完成 Cloudflare Pages 发布并记录生产 URL。
 - [ ] 增加项目截图。
 - [ ] 增加 Docker Compose 或更完整本地启动说明。
 - [ ] 增加架构图导出图片。
-- [ ] 完成 Cloudflare Pages 发布并记录生产 URL。
 - [ ] **验收**：GitHub 首页能作为简历项目入口。
 
 ## 4. 里程碑到 PR 映射
