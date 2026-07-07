@@ -8,11 +8,11 @@
     </select>
 
     <insert id="insert">
-        INSERT INTO answer (id, source_type, source_ip, answer, survey_id, create_time)
-        VALUES(null, #{sourceType}, #{sourceIp}, #{answer}, #{surveyId}, now())
+        INSERT INTO answer (source_type, source_ip, answer, survey_id, create_time)
+        VALUES(#{sourceType}, #{sourceIp}, #{answer}, #{surveyId}, now())
     </insert>
 
     <select id="list" resultType="com.wjh.quest.entity.Answer">
-        select * from answer where survey_id = #{surveyId}
+        select * from answer where survey_id = #{surveyId} order by create_time desc
     </select>
 </mapper>

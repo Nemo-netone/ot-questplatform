@@ -1,6 +1,6 @@
 # Quest Survey Platform
 
-一个基于 Spring Boot、MyBatis、MySQL、Redis 和 Layui 的问卷管理平台，覆盖后台登录、问卷创建、问卷发布、链接/二维码分享、在线填写和答卷查看。
+一个基于 Spring Boot、MyBatis、PostgreSQL/Supabase 和 Layui 的问卷管理平台，覆盖后台登录、问卷创建、问卷发布、链接/二维码分享、在线填写和答卷查看。前端可部署到 Cloudflare Pages，后端可部署到 CloudBase Run，数据库可使用 Supabase PostgreSQL。
 
 ## 系统总览
 
@@ -9,10 +9,10 @@ Browser static pages
   -> Spring MVC Controller
   -> Service business orchestration
   -> MyBatis Mapper XML
-  -> MySQL quest-platform
+  -> PostgreSQL / Supabase quest_platform
 
-Login session cache:
-Browser username marker -> Controller login check -> Redis user:login{username}
+Auth flow:
+Browser login form -> /user/login -> JWT-like token -> Authorization Bearer header
 ```
 
 ## 核心功能
@@ -28,7 +28,7 @@ Browser username marker -> Controller login check -> Redis user:login{username}
 ## 端到端数据流
 
 1. 管理员打开 `/page/login.html`，提交用户名和密码到 `/user/login`。
-2. 后端校验 `user` 表，登录成功后把用户登录态缓存到 Redis。
+2. 后端校验 `user` 表，登录成功后返回 token，前端后续请求通过 `Authorization: Bearer ...` 携带登录态。
 3. 管理员在 `/index.html` 查看问卷列表，前端调用 `/survey/list`。
 4. 创建问卷时，前端提交标题、题目和选项到 `/survey/edit`。
 5. 后端写入 `survey`、`question`、`option` 三类表。
@@ -42,10 +42,10 @@ Browser username marker -> Controller login check -> Redis user:login{username}
 |------|------|------|
 | 后端 | Spring Boot 2.3.12 | Web API 与静态资源服务 |
 | 数据访问 | MyBatis + XML Mapper | SQL 映射和数据库访问 |
-| 数据库 | MySQL 8 | 问卷、题目、选项、答卷、用户持久化 |
-| 缓存 | Redis | 登录态缓存 |
+| 数据库 | PostgreSQL / Supabase | 问卷、题目、选项、答卷、用户持久化 |
+| 认证 | HMAC token | 后台写操作登录态校验 |
 | 前端 | HTML + CSS + Layui + jQuery | 页面渲染、表单构建、接口调用 |
-| 构建 | Maven | 依赖管理、编译、打包 |
+| 构建/部署 | Maven, Docker | 依赖管理、编译、打包、CloudBase 容器部署 |
 | 工具库 | PageHelper, ZXing, FastJSON | 分页、二维码、JSON 处理 |
 
 ## 项目结构
@@ -75,7 +75,8 @@ Browser username marker -> Controller login check -> Redis user:login{username}
     ├── 05-interfaces.md
     ├── conventions.md
     ├── mvp-plan.md
-    └── database/quest-platform.sql
+    ├── database/quest-platform.sql
+    └── database/quest-platform-postgres.sql
 ```
 
 ## 快速开始
@@ -86,24 +87,23 @@ Browser username marker -> Controller login check -> Redis user:login{username}
 |------|----------|------|
 | JDK | 8 | 项目源码目标版本为 Java 8 |
 | Maven | 3.6+ | 编译与运行 |
-| MySQL | 8.x | 默认库名 `quest-platform` |
-| Redis | 5+ | 默认端口 `16379`，可通过环境变量调整 |
+| PostgreSQL | 14+ | 本地库名建议 `quest_platform`，线上可用 Supabase |
 
 ### 2. 初始化数据库
 
-先创建数据库：
-
-```sql
-CREATE DATABASE `quest-platform` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-再导入脚本：
+推荐使用 PostgreSQL/Supabase 脚本：
 
 ```bash
-mysql -u root -p quest-platform < docs/database/quest-platform.sql
+psql "<postgres-connection-string>" -f docs/database/quest-platform-postgres.sql
 ```
 
-脚本会创建并初始化 `user`、`survey`、`question`、`option`、`answer` 表。示例系统账号见 [docs/05-interfaces.md](docs/05-interfaces.md#4-默认示例账号)。
+也可以在 Supabase Dashboard 的 SQL Editor 中直接执行：
+
+```text
+docs/database/quest-platform-postgres.sql
+```
+
+旧版 MySQL 脚本仍保留在 `docs/database/quest-platform.sql`，用于课程资料追溯。当前云部署推荐 PostgreSQL 脚本。脚本会创建并初始化 `user`、`survey`、`question`、`option`、`answer` 表。示例系统账号见 [docs/05-interfaces.md](docs/05-interfaces.md#4-默认示例账号)。
 
 ### 3. 配置本地环境变量
 
@@ -112,16 +112,17 @@ mysql -u root -p quest-platform < docs/database/quest-platform.sql
 PowerShell 示例：
 
 ```powershell
-$env:DB_USERNAME="root"
-$env:DB_PASSWORD="<your-local-mysql-password>"
-$env:REDIS_HOST="localhost"
-$env:REDIS_PORT="16379"
+$env:DB_URL="jdbc:postgresql://localhost:5432/quest_platform"
+$env:DB_USERNAME="postgres"
+$env:DB_PASSWORD="<your-postgres-password>"
+$env:APP_AUTH_SECRET="<long-random-secret>"
+$env:CORS_ALLOWED_ORIGINS="http://localhost:8080,https://ot-questplatform.pages.dev"
 ```
 
-如需覆盖 JDBC 地址：
+Supabase JDBC 地址通常从 Supabase Dashboard 的数据库连接页面复制，形态类似：
 
-```powershell
-$env:DB_URL="jdbc:mysql://localhost:3306/quest-platform?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai"
+```text
+jdbc:postgresql://<host>:5432/postgres?sslmode=require
 ```
 
 ### 4. 启动应用
@@ -170,7 +171,7 @@ http://localhost:8080/index.html
 | 发布目录 | `src/main/resources/static` |
 | 已发布地址 | `https://ot-questplatform.pages.dev` |
 
-注意：Cloudflare Pages 只托管静态 HTML/CSS/JS，不运行 Spring Boot API。完整业务流程仍需要单独运行 Java 后端、MySQL 和 Redis。部署细节见 [docs/deployment.md](docs/deployment.md)。
+注意：Cloudflare Pages 只托管静态 HTML/CSS/JS，不运行 Spring Boot API。完整业务流程需要把 Java 后端部署到 CloudBase Run，并连接 Supabase PostgreSQL。部署细节见 [docs/deployment.md](docs/deployment.md)。
 
 ## 配置与密钥策略
 
@@ -178,13 +179,12 @@ http://localhost:8080/index.html
 
 | 环境变量 | 默认值 | 敏感 | 说明 |
 |----------|--------|------|------|
-| `DB_URL` | 本机 `quest-platform` JDBC | 否 | MySQL 连接地址 |
-| `DB_USERNAME` | `root` | 否 | MySQL 用户名 |
-| `DB_PASSWORD` | 空 | 是 | MySQL 密码，必须本地配置 |
-| `REDIS_HOST` | `localhost` | 否 | Redis 主机 |
-| `REDIS_PORT` | `16379` | 否 | Redis 端口 |
-| `REDIS_PASSWORD` | 空 | 是 | Redis 密码 |
-| `REDIS_DATABASE` | `0` | 否 | Redis database index |
+| `DB_URL` | 本机 PostgreSQL JDBC | 否 | PostgreSQL/Supabase JDBC 地址 |
+| `DB_USERNAME` | `postgres` | 否 | PostgreSQL/Supabase 用户名 |
+| `DB_PASSWORD` | 空 | 是 | PostgreSQL/Supabase 密码 |
+| `APP_AUTH_SECRET` | `change-me-in-production` | 是 | token 签名密钥，线上必须改成长随机值 |
+| `APP_AUTH_TOKEN_TTL_SECONDS` | `86400` | 否 | 登录 token 有效期 |
+| `CORS_ALLOWED_ORIGINS` | 本地和 Pages 地址 | 否 | 允许访问后端 API 的前端域名 |
 
 不要把真实密码、token、Cookie 或线上连接串提交到仓库。
 
@@ -205,7 +205,7 @@ http://localhost:8080/index.html
 ## 当前边界
 
 - 这是学习型问卷平台，不是生产级认证系统。
-- 当前登录态依赖 Redis 与前端用户名标记，后续应升级为服务端会话或 JWT。
+- 当前登录态为 HMAC token，适合作品演示；生产系统仍建议接入成熟认证方案。
 - 密码仍为明文存储，后续应引入 BCrypt 等不可逆哈希。
 - 答卷内容以 JSON 字符串保存在 `answer.answer`，适合演示，复杂统计场景应拆成答题明细表。
 

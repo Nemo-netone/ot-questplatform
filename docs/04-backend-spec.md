@@ -15,7 +15,8 @@
 | 问卷服务 | `service/SurveyService.java` | 问卷、题目、选项写入和查询编排 |
 | 问题服务 | `service/QuestionService.java` | 问题与选项组装 |
 | 答卷服务 | `service/AnswerService.java` | 答卷写入和分页查询 |
-| Redis 服务 | `service/RedisService.java` | 登录态序列化、读取、删除和过期 |
+| 认证服务 | `service/AuthService.java` | 签发和校验 HMAC token |
+| Web 配置 | `config/WebConfig.java` | CORS 配置 |
 
 ## 2. 核心抽象
 
@@ -37,8 +38,8 @@ UserController.login
   -> UserService.login
   -> UserMapper.login
   -> login.setPassword(null)
-  -> RedisService.putValue
-  -> Result.success(login)
+  -> AuthService.issueToken
+  -> Result.success(user profile + token)
 ```
 
 ### 3.2 问卷查询
@@ -94,7 +95,7 @@ SurveyService.update
 | 未登录操作 | `400 用户未登录` | 拒绝后台写操作 | 抽成拦截器 |
 | 启用问卷被删除 | `400 问卷为开启状态不可删除` | 保护公开问卷 | 保持 |
 | 未启用问卷填写 | `400 问卷未开启不可操作` | 禁止受访者提交 | 保持 |
-| Redis 不可用 | 请求异常 | 后台登录态失效 | 增加降级或启动检查 |
+| token 缺失或过期 | `400 用户未登录` | 拒绝后台写操作 | 后续抽成拦截器 |
 | 数据库不可用 | 请求异常 | 主链路不可用 | 增加健康检查 |
 
 ## 6. 配置
@@ -102,12 +103,11 @@ SurveyService.update
 | 配置 | 来源 | 说明 |
 |------|------|------|
 | `DB_URL` | 环境变量 | JDBC 地址 |
-| `DB_USERNAME` | 环境变量 | MySQL 用户 |
-| `DB_PASSWORD` | 环境变量 | MySQL 密码 |
-| `REDIS_HOST` | 环境变量 | Redis 主机 |
-| `REDIS_PORT` | 环境变量 | Redis 端口 |
-| `REDIS_PASSWORD` | 环境变量 | Redis 密码 |
-| `REDIS_DATABASE` | 环境变量 | Redis DB |
+| `DB_USERNAME` | 环境变量 | PostgreSQL/Supabase 用户 |
+| `DB_PASSWORD` | 环境变量 | PostgreSQL/Supabase 密码 |
+| `APP_AUTH_SECRET` | 环境变量 | token 签名密钥 |
+| `APP_AUTH_TOKEN_TTL_SECONDS` | 环境变量 | token 有效期 |
+| `CORS_ALLOWED_ORIGINS` | 环境变量 | 允许访问 API 的前端域名 |
 
 ## 7. 测试策略
 
@@ -124,5 +124,5 @@ SurveyService.update
 
 - 真实数据库密码不得提交。
 - 登录接口不得返回明文密码。
-- Redis 日志不得打印完整用户对象。
+- token 签名密钥不得提交。
 - 当前密码仍为明文存储，只适合作品演示和学习，不适合生产。

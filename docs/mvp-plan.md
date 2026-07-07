@@ -43,18 +43,18 @@ Out：
 
 ### M1 · 配置安全化
 
-- [x] `application.yml` 改为环境变量读取数据库和 Redis 配置。
+- [x] `application.yml` 改为环境变量读取数据库、token 和 CORS 配置。
 - [x] 新增 `.env.example`。
 - [x] `.gitignore` 忽略本地 `.env`。
 - [x] **验收**：仓库不包含本机真实数据库密码。
 
 ### M2 · 基础质量修复
 
-- [x] 修复 Redis 过期时间方法写死 key。
+- [x] 移除 Redis 登录态依赖，改为 token 校验。
 - [x] 登录接口不返回明文密码。
 - [x] 问卷更新保留原问卷 ID。
 - [ ] 增加最小 MockMvc 或 Service 测试。
-- [ ] **验收**：compile/package 已通过，关键流程待本地 MySQL/Redis 启动后手动验证。
+- [ ] **验收**：compile/package 已通过，关键流程待 Supabase/CloudBase 配置后手动验证。
 
 ### M3 · 展示增强
 
@@ -70,8 +70,8 @@ Out：
 | PR | 标题建议 | 范围 |
 |----|----------|------|
 | PR-1 | `docs: 初始化项目 README 与 SSR 文档栈` | README、docs |
-| PR-2 | `chore: 环境变量化数据库和 Redis 配置` | application.yml、.env.example |
-| PR-3 | `fix: 修复 Redis 过期时间和登录密码返回` | RedisService、UserController |
+| PR-2 | `chore: 环境变量化数据库、token 和 CORS 配置` | application.yml、.env.example |
+| PR-3 | `fix: 改造登录态为 token 并适配云部署` | AuthService、UserController |
 | PR-4 | `fix: 保留问卷更新时的主键和历史答卷` | SurveyService、SurveyMapper |
 | PR-5 | `test: 增加核心接口或服务测试` | test |
 | PR-6 | `docs: 增加截图和部署说明` | docs、README |
@@ -89,8 +89,8 @@ Out：
 
 | 风险 | 影响 | 对策 |
 |------|------|------|
-| MySQL 密码写入仓库 | 泄露本机配置习惯 | 使用环境变量和 `.env.example` |
-| Redis 未启动导致登录校验失败 | 后台操作不可用 | README 明确 Redis 依赖 |
+| Supabase 密码写入仓库 | 泄露线上配置 | 使用环境变量和 `.env.example` |
+| token 签名密钥过短或入库 | 登录态可被伪造 | CloudBase 环境变量配置长随机值 |
 | 初始化 SQL 含 DROP TABLE | 误删已有数据 | 文档注明仅用于本地演示 |
 | 密码明文存储 | 不适合生产 | docs 标为技术债，后续引入 BCrypt |
 

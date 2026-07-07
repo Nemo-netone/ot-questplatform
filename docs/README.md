@@ -10,8 +10,8 @@
 | Web API | Spring MVC | 接收请求、参数绑定、登录态校验、统一返回 |
 | 业务层 | Spring Service | 问卷、题目、选项、答卷和登录流程编排 |
 | 数据访问 | MyBatis Mapper XML | 执行 SQL，映射实体对象 |
-| 持久化 | MySQL | 保存用户、问卷、题目、选项、答卷 |
-| 会话缓存 | Redis | 保存后台用户登录态 |
+| 持久化 | PostgreSQL / Supabase | 保存用户、问卷、题目、选项、答卷 |
+| 认证 | HMAC token | 保存前端登录态并校验后台写操作 |
 
 ## 架构边界
 
@@ -34,7 +34,7 @@
 | 5 | [05-interfaces.md](05-interfaces.md) | API、字段、示例、错误约定 |
 | 6 | [conventions.md](conventions.md) | 可检查的编码和文档规范 |
 | 7 | [mvp-plan.md](mvp-plan.md) | 里程碑、PR 映射、风险 |
-| 8 | [database/quest-platform.sql](database/quest-platform.sql) | MySQL 初始化脚本 |
+| 8 | [database/quest-platform-postgres.sql](database/quest-platform-postgres.sql) | Supabase/PostgreSQL 初始化脚本 |
 | 9 | [deployment.md](deployment.md) | Cloudflare Pages 静态预览部署策略 |
 
 ## 关键术语
@@ -45,5 +45,5 @@
 | Question | 问卷中的一道题，类型包括 text、textarea、select、radio、checkbox |
 | Option | select/radio/checkbox 题目的候选项 |
 | Answer | 一次问卷提交，当前以 JSON 字符串保存整份答案 |
-| Login state | 后台用户登录态，保存在 Redis 的 `user:login{username}` key 下 |
+| Login state | 后台用户登录态，前端保存 token，后端通过 `Authorization: Bearer ...` 校验 |
 | Soft delete | 问卷逻辑删除，设置 `is_delete=1`，不物理删除 |

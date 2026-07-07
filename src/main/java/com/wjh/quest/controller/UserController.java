@@ -1,10 +1,12 @@
 package com.wjh.quest.controller;
 
 import com.wjh.quest.entity.User;
-import com.wjh.quest.service.RedisService;
+import com.alibaba.fastjson.JSONObject;
+import com.wjh.quest.service.AuthService;
 import com.wjh.quest.service.UserService;
 import com.wjh.quest.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,20 +21,26 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private RedisService redisService;
+    private AuthService authService;
 
     @PostMapping("login")
-    public Result<User> login(@RequestBody User user) {
+    public Result<JSONObject> login(@RequestBody User user) {
         // 登录
         User login = userService.login(user);
         if (Objects.isNull(login)) {
             return Result.error(400, "登录失败!");
         }
 
-        // 登录成功后缓存用户登录态，避免把明文密码返回给前端或写入Redis。
+        String token = authService.issueToken(login);
         login.setPassword(null);
-        redisService.putValue("user:login" + login.getUsername(), login, 60 * 60 * 24);
-        return Result.success(login);
+
+        JSONObject result = new JSONObject();
+        result.put("id", login.getId());
+        result.put("username", login.getUsername());
+        result.put("phone", login.getPhone());
+        result.put("status", login.getStatus());
+        result.put("token", token);
+        return Result.success(result);
     }
 
     @PostMapping("register")
@@ -46,9 +54,9 @@ public class UserController {
     }
 
     @PostMapping("logout")
-    public Result logout(@RequestBody User user) {
-        // 登出删除redis用户信息
-        redisService.deleteValue("user:login" + user.getUsername());
+    public Result logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        // JWT 为无状态令牌，退出由前端删除本地 token 完成。
+        authService.getUsername(authorization);
         return Result.success();
     }
 }

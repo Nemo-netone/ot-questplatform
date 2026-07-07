@@ -45,6 +45,7 @@
 </div>
 
 <script src="../layui.js"></script>
+<script src="../js/app-config.js"></script>
 <script>
     layui.use(['jquery', 'layer'], function(){
         var $ = layui.jquery;
@@ -102,7 +103,7 @@
 
             // 发送注册请求
             $.ajax({
-                url: '/user/register',
+                url: QuestConfig.apiUrl('/user/register'),
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({

@@ -53,6 +53,7 @@
 </script>
 
 <script src="../layui.js"></script>
+<script src="../js/app-config.js"></script>
 <script src="../js/user.js"></script>
 <script>
     layui.use(['table', 'jquery', 'layer', 'user'], function(){
@@ -87,7 +88,8 @@
         // 初始化表格
         table.render({
             elem: '#answer-table',
-            url: '/answer/list',
+            url: QuestConfig.apiUrl('/answer/list'),
+            headers: QuestConfig.authHeaders(),
             where: {
                 surveyId: surveyId,
                 username: localStorage.getItem('username')

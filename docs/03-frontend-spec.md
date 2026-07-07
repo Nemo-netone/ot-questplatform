@@ -35,7 +35,8 @@
 
 | 组件/区域 | 职责 | 输入 | 输出 |
 |-----------|------|------|------|
-| `user.js` | 登录状态显示、退出、页面登录检查 | localStorage username | 页面跳转/Ajax |
+| `app-config.js` | API 基址、token header 组装 | localStorage / query | 后端 API URL |
+| `user.js` | 登录状态显示、退出、页面登录检查 | localStorage username/token | 页面跳转/Ajax |
 | 组件面板 | 提供可拖拽题型 | 拖拽操作 | `data-type` |
 | 表单构建区 | 承载题目卡片 | drop 事件 | DOM 题目结构 |
 | 问卷填写表单 | 根据后端问题数据渲染控件 | `questions` | 用户答案 JSON |
@@ -45,7 +46,9 @@
 
 | 状态 | 存放位置 | 说明 |
 |------|----------|------|
-| `username` | `localStorage` | 前端登录标记，后台操作会同时由 Redis 校验 |
+| `username` | `localStorage` | 前端显示当前用户 |
+| `authToken` | `localStorage` | 后台写操作使用的 Authorization token |
+| `QUEST_API_BASE_URL` | `localStorage` | Cloudflare Pages 指向 CloudBase API 的基址 |
 | `surveyId` | URL query | 编辑、预览、填写、答卷查看的问卷 ID |
 | `type` | URL query / JS 变量 | `insert`、`update`、`preview`、`answer` |
 | `fields` | DOM 收集后生成 JSON | 问卷题目和选项 |
@@ -65,11 +68,11 @@
 
 ### 6.1 创建问卷
 
-1. 检查 `localStorage.username`。
+1. 检查 `localStorage.username` 和 `localStorage.authToken`。
 2. 用户拖拽题型到构建区。
 3. 用户填写题目标题和选项。
 4. 点击生成，前端组装 `{ username, type, formTitle, fields }`。
-5. POST `/survey/edit`。
+5. POST `/survey/edit`，请求头带 `Authorization: Bearer <token>`。
 6. 成功后跳回 `/index.html`。
 
 ### 6.2 填写问卷

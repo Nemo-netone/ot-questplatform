@@ -5,9 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageInfo;
 import com.wjh.quest.entity.Question;
 import com.wjh.quest.entity.Survey;
-import com.wjh.quest.entity.User;
 import com.wjh.quest.service.QuestionService;
-import com.wjh.quest.service.RedisService;
+import com.wjh.quest.service.AuthService;
 import com.wjh.quest.service.SurveyService;
 import com.wjh.quest.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,15 +31,12 @@ public class SurveyController {
     }
 
     @Autowired
-    private RedisService redisService;
+    private AuthService authService;
 
     @PostMapping("updateStatus")
-    public Result updateStatus(@RequestBody JSONObject param) {
-        String username = param.getString("username");
-
-        // 判断是否登录
-        User user = redisService.getValue("user:login" + username, User.class);
-        if (Objects.isNull(user)) {
+    public Result updateStatus(@RequestHeader(value = "Authorization", required = false) String authorization,
+                               @RequestBody JSONObject param) {
+        if (!fillAuthenticatedUsername(authorization, param)) {
             return Result.error(400, "用户未登录!");
         }
 
@@ -50,10 +46,9 @@ public class SurveyController {
     }
 
     @PostMapping("remove")
-    public Result removeById(@RequestBody JSONObject param) {
-        // 判断用户是否登录
-        User user = redisService.getValue("user:login" + param.getString("username"), User.class);
-        if (Objects.isNull(user)) {
+    public Result removeById(@RequestHeader(value = "Authorization", required = false) String authorization,
+                             @RequestBody JSONObject param) {
+        if (!fillAuthenticatedUsername(authorization, param)) {
             return Result.error(400, "用户未登录!");
         }
 
@@ -70,10 +65,9 @@ public class SurveyController {
     }
 
     @PostMapping("restore")
-    public Result restoreById(@RequestBody JSONObject param) {
-        // 判断用户是否登录
-        User user = redisService.getValue("user:login" + param.getString("username"), User.class);
-        if (Objects.isNull(user)) {
+    public Result restoreById(@RequestHeader(value = "Authorization", required = false) String authorization,
+                              @RequestBody JSONObject param) {
+        if (!fillAuthenticatedUsername(authorization, param)) {
             return Result.error(400, "用户未登录!");
         }
 
@@ -115,13 +109,11 @@ public class SurveyController {
     }
 
     @PostMapping("edit")
-    public Result edit(@RequestBody JSONObject param) {
-        String username = param.getString("username");
+    public Result edit(@RequestHeader(value = "Authorization", required = false) String authorization,
+                       @RequestBody JSONObject param) {
         JSONArray fields = param.getJSONArray("fields");
 
-        // 判断是否登录
-        User user = redisService.getValue("user:login" + username, User.class);
-        if (Objects.isNull(user)) {
+        if (!fillAuthenticatedUsername(authorization, param)) {
             return Result.error(400, "用户未登录!");
         }
 
@@ -138,5 +130,14 @@ public class SurveyController {
         }
 
         return Result.success();
+    }
+
+    private boolean fillAuthenticatedUsername(String authorization, JSONObject param) {
+        String username = authService.getUsername(authorization);
+        if (username == null) {
+            return false;
+        }
+        param.put("username", username);
+        return true;
     }
 }

@@ -61,11 +61,17 @@
   "data": {
     "id": 1,
     "username": "admin",
-    "password": null,
     "phone": "123456",
-    "status": 0
+    "status": 0,
+    "token": "<jwt-like-token>"
   }
 }
+```
+
+需要登录态的接口必须携带：
+
+```http
+Authorization: Bearer <token>
 ```
 
 ### 3.2 问卷列表
@@ -222,13 +228,12 @@
 
 | 变量 | 必填 | 敏感 | 说明 |
 |------|------|------|------|
-| `DB_URL` | 否 | 否 | MySQL JDBC 地址 |
-| `DB_USERNAME` | 否 | 否 | MySQL 用户 |
-| `DB_PASSWORD` | 是 | 是 | MySQL 密码 |
-| `REDIS_HOST` | 否 | 否 | Redis 主机 |
-| `REDIS_PORT` | 否 | 否 | Redis 端口 |
-| `REDIS_PASSWORD` | 否 | 是 | Redis 密码 |
-| `REDIS_DATABASE` | 否 | 否 | Redis DB |
+| `DB_URL` | 否 | 否 | PostgreSQL/Supabase JDBC 地址 |
+| `DB_USERNAME` | 否 | 否 | PostgreSQL/Supabase 用户 |
+| `DB_PASSWORD` | 是 | 是 | PostgreSQL/Supabase 密码 |
+| `APP_AUTH_SECRET` | 是 | 是 | token 签名密钥 |
+| `APP_AUTH_TOKEN_TTL_SECONDS` | 否 | 否 | token 有效期 |
+| `CORS_ALLOWED_ORIGINS` | 否 | 否 | 允许访问 API 的前端域名 |
 
 ## 6. 错误约定
 

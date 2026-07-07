@@ -1,6 +1,6 @@
 # Deployment
 
-本文记录 Quest Survey Platform 的部署策略。当前项目是 Spring Boot 单体应用，Cloudflare Pages 只适合发布静态前端资源；Java API、MySQL 和 Redis 需要由本地环境或后端服务器单独运行。
+本文记录 Quest Survey Platform 的部署策略。当前推荐形态是：Cloudflare Pages 发布静态前端，CloudBase Run 托管 Spring Boot API，Supabase PostgreSQL 保存业务数据。
 
 ## 1. Cloudflare Pages 静态预览
 
@@ -26,9 +26,36 @@ Cloudflare Pages 发布后可以打开静态页面，例如：
 - `https://ot-questplatform.pages.dev/page/login.html`
 - `https://ot-questplatform.pages.dev/page/answer.html`
 
-但这些页面仍会调用相对路径 API，例如 `/user/login`、`/survey/list`、`/answer/add`。如果没有把 Spring Boot API 部署到同域名、反向代理或独立后端域名，页面能打开，但业务接口不会完整工作。
+静态页面通过 `src/main/resources/static/js/app-config.js` 中的 `QuestConfig.apiUrl()` 访问后端。未配置 API 基址时，请求会打到同域名；部署 CloudBase 后，应把 `QUEST_API_BASE_URL` 或 `localStorage.QUEST_API_BASE_URL` 设置为 CloudBase 后端地址。
 
-## 3. Wrangler 发布命令
+临时测试远程 API 可以在浏览器地址后追加：
+
+```text
+https://ot-questplatform.pages.dev/page/login.html?apiBase=https://<cloudbase-api-domain>
+```
+
+该地址会写入浏览器 `localStorage`，后续页面会继续使用这个 API 基址。
+
+## 3. CloudBase Run 后端部署
+
+后端使用仓库根目录的 `Dockerfile` 构建 Spring Boot 容器。CloudBase Run 需要配置以下环境变量：
+
+| 环境变量 | 说明 |
+|----------|------|
+| `DB_URL` | Supabase PostgreSQL JDBC 地址，通常需要 `sslmode=require` |
+| `DB_USERNAME` | Supabase 数据库用户名 |
+| `DB_PASSWORD` | Supabase 数据库密码 |
+| `APP_AUTH_SECRET` | token 签名密钥，必须使用长随机字符串 |
+| `APP_AUTH_TOKEN_TTL_SECONDS` | 登录有效期，默认 `86400` |
+| `CORS_ALLOWED_ORIGINS` | 允许访问 API 的前端域名，例如 `https://ot-questplatform.pages.dev` |
+
+Supabase 初始化脚本：
+
+```text
+docs/database/quest-platform-postgres.sql
+```
+
+## 4. Wrangler 发布命令
 
 凭据只放在本机环境变量或 Cloudflare 控制台，不写入仓库文件。
 
@@ -46,7 +73,7 @@ wrangler pages deploy src/main/resources/static `
 
 如果 Pages 项目已经存在，跳过 `project create`，只执行 `pages deploy`。
 
-## 4. GitHub 连接式发布
+## 5. GitHub 连接式发布
 
 也可以在 Cloudflare Dashboard 中连接 GitHub 仓库：
 
@@ -60,7 +87,7 @@ wrangler pages deploy src/main/resources/static `
 
 这种方式适合长期维护：以后推送到 `main` 后，Cloudflare Pages 会自动重新发布，默认地址仍保持 `https://ot-questplatform.pages.dev`。
 
-## 5. 发布前检查
+## 6. 发布前检查
 
 - [ ] `git status --short --branch` 显示当前分支为 `main`。
 - [ ] `git push` 已把最新提交推到 `origin/main`。
@@ -68,3 +95,5 @@ wrangler pages deploy src/main/resources/static `
 - [ ] Pages 项目名仍为 `ot-questplatform`。
 - [ ] 发布目录仍为 `src/main/resources/static`。
 - [ ] 仓库没有提交 `.env`、token、数据库密码或云服务密钥。
+- [ ] Supabase 已执行 `docs/database/quest-platform-postgres.sql`。
+- [ ] CloudBase Run 已配置 `DB_*`、`APP_AUTH_SECRET` 和 `CORS_ALLOWED_ORIGINS`。

@@ -7,7 +7,7 @@
         select * from survey
         <where>
             <if test="title != null and title != ''">
-                and title like concat('%',#{title},'%')
+                and title ilike '%' || #{title} || '%'
             </if>
             and is_delete = #{isDelete}
         </where>
@@ -40,9 +40,9 @@
         SELECT * FROM survey WHERE id = #{id} and is_delete = 0
     </select>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO survey (id, title, status, create_time, creator, is_delete)
-        VALUES(null, #{title}, 0, now(), #{creator}, 0);
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO survey (title, status, create_time, creator, is_delete)
+        VALUES(#{title}, 0, now(), #{creator}, 0)
     </insert>
 
     <delete id="deleteById">

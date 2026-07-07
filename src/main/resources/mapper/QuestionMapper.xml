@@ -7,9 +7,9 @@
         SELECT * FROM question WHERE survey_id = #{surveyId}
     </select>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO question (id, survey_id, title, create_time, `type`)
-        VALUES(null, #{surveyId}, #{title}, now(), #{type});
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO question (survey_id, title, create_time, "type")
+        VALUES(#{surveyId}, #{title}, now(), #{type})
     </insert>
 
     <delete id="deleteBySurveyId">

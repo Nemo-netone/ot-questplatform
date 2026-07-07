@@ -35,15 +35,17 @@ layui.define(['jquery', 'layer'], function(exports) {
                 title: '提示'
             }, function(index) {
                 $.ajax({
-                    url: '/user/logout',
+                    url: QuestConfig.apiUrl('/user/logout'),
                     type: 'POST',
+                    headers: QuestConfig.authHeaders(),
                     contentType: 'application/json',
-                    data: JSON.stringify({ username: username }),
+                    data: JSON.stringify({}),
                     success: function(res) {
                         layer.close(index);
                         if (res.code === 200) {
                             layer.msg('退出登录成功', {icon: 1});
                             localStorage.removeItem('username');
+                            localStorage.removeItem('authToken');
                             window.location.reload();
                         } else {
                             layer.msg(res.msg || '退出登录失败', {icon: 2});
@@ -59,7 +61,7 @@ layui.define(['jquery', 'layer'], function(exports) {
 
         // 检查用户登录状态
         checkLogin: function() {
-            if (!localStorage.getItem('username')) {
+            if (!localStorage.getItem('username') || !localStorage.getItem('authToken')) {
                 window.location.href = '../page/login.html';
                 return false;
             }

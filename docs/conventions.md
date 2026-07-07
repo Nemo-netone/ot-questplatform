@@ -35,7 +35,8 @@
 
 | 规则 | 说明 |
 |------|------|
-| 初始化脚本放 `docs/database/quest-platform.sql` | 便于 GitHub 仓库独立运行 |
+| 推荐初始化脚本放 `docs/database/quest-platform-postgres.sql` | 便于 Supabase/CloudBase 云部署 |
+| 旧版 MySQL 脚本只作课程资料追溯 | 不作为当前云部署事实源 |
 | SQL 文件使用 UTF-8 | 避免中文乱码 |
 | 答卷整段 JSON 使用 `TEXT` | 避免 255 字符截断 |
 | 生产迁移不使用 `DROP TABLE` 初始化脚本 | 当前脚本仅适合本地演示 |
@@ -55,7 +56,7 @@
 |------|----------|
 | 新增写操作应标注事务边界 | 查 `@Transactional` |
 | 登录接口不得返回明文密码 | 查 `UserController.login` |
-| Redis 日志不得打印用户对象 | 搜索 `System.out` |
+| token 签名密钥不得写入仓库 | 搜索 `APP_AUTH_SECRET` 和真实密钥 |
 | 重复登录校验后续抽拦截器 | 技术债记录 |
 
 ## 7. 测试和验证
@@ -67,7 +68,7 @@ mvn -DskipTests compile
 mvn clean package -DskipTests
 ```
 
-有本地 MySQL 和 Redis 时，补充手动验收：
+有 Supabase/PostgreSQL 和后端环境变量时，补充手动验收：
 
 1. 登录后台。
 2. 创建问卷。

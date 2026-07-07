@@ -1,0 +1,9 @@
+.git
+.idea
+.wrangler
+target
+HELP.md
+.DS_Store
+.env
+.env.*
+!.env.example

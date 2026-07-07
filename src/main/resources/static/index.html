@@ -60,6 +60,7 @@
 </div>
 
 <script src="layui.js"></script>
+<script src="js/app-config.js"></script>
 <script src="./js/user.js"></script>
 <script>
     layui.use(['jquery', 'layer', 'laypage', 'user'], function(){
@@ -89,7 +90,7 @@
             `);
 
             $.ajax({
-                url: '/survey/list',
+                url: QuestConfig.apiUrl('/survey/list'),
                 type: 'GET',
                 data: {
                     isDelete: isDelete,
@@ -280,7 +281,7 @@
                         <div>
                             <label style="display:block; margin-bottom:8px; color:#4a5568;">二维码</label>
                             <div style="text-align:center;">
-                                <img src="/api/qrcode?content=${encodeURIComponent(shareUrl)}"
+                                <img src="${QuestConfig.apiUrl('/api/qrcode?content=' + encodeURIComponent(shareUrl))}"
                                      style="width:200px; height:200px; border:1px solid #eee;">
                                 <p style="margin-top:10px; color:#718096;">扫描二维码填写问卷</p>
                             </div>
@@ -310,8 +311,9 @@
                     btn: ['确定','取消']
                 }, function(index) {
                     $.ajax({
-                        url: '/survey/remove/',
+                        url: QuestConfig.apiUrl('/survey/remove/'),
                         type: 'POST',
+                        headers: QuestConfig.authHeaders(),
                         contentType: 'application/json',
                         data: JSON.stringify({
                             username: localStorage.getItem('username'),
@@ -344,8 +346,9 @@
                 btn: ['确定','取消']
             }, function(index) {
                 $.ajax({
-                    url: '/survey/restore/',
+                    url: QuestConfig.apiUrl('/survey/restore/'),
                     type: 'POST',
+                    headers: QuestConfig.authHeaders(),
                     contentType: 'application/json',
                     data: JSON.stringify({
                         username: localStorage.getItem('username'),
@@ -380,8 +383,9 @@
                 btn: ['确定','取消']
             }, function(index) {
                 $.ajax({
-                    url: '/survey/updateStatus',
+                    url: QuestConfig.apiUrl('/survey/updateStatus'),
                     type: 'POST',
+                    headers: QuestConfig.authHeaders(),
                     contentType: 'application/json',
                     data: JSON.stringify({
                         username: localStorage.getItem('username'),

@@ -22,6 +22,7 @@
 </div>
 
 <script src="../layui.js"></script>
+<script src="../js/app-config.js"></script>
 <script>
     layui.use(['form', 'jquery', 'layer'], function () {
         var form = layui.form;
@@ -41,7 +42,7 @@
         function loadSurveyData(surveyId) {
             var url = "/survey/" + surveyId + "/" + type;
             $.ajax({
-                url: url,
+                url: QuestConfig.apiUrl(url),
                 type: "GET",
                 dataType: "json",
                 success: function(response) {
@@ -181,7 +182,7 @@
                 }
 
                 $.ajax({
-                    url: "/answer/add",
+                    url: QuestConfig.apiUrl("/answer/add"),
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify({
