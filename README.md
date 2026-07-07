@@ -24,6 +24,22 @@
 
 演示环境用于项目展示和学习验证，请不要提交真实个人信息或敏感业务数据。
 
+## 界面预览
+
+以下截图使用演示数据生成，用于快速展示后台管理、问卷构建、公开填写和答卷查看的主要效果。真实可操作入口见上方在线演示地址。
+
+| 后台登录 | 问卷列表 |
+|----------|----------|
+| <img src="docs/images/screenshots/01-login.png" alt="后台登录" width="420"> | <img src="docs/images/screenshots/02-dashboard.png" alt="问卷列表" width="420"> |
+
+| 问卷构建 | 公开填写 |
+|----------|----------|
+| <img src="docs/images/screenshots/03-survey-editor.png" alt="问卷构建" width="420"> | <img src="docs/images/screenshots/04-answer-form.png" alt="公开填写问卷" width="420"> |
+
+| 答卷数据 |
+|----------|
+| <img src="docs/images/screenshots/05-answer-table.png" alt="答卷数据" width="420"> |
+
 ## 系统总览
 
 ```text
