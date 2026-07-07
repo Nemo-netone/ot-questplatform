@@ -28,18 +28,27 @@ flowchart LR
 
 ## 2. 当前运行状态
 
-最近核对时间：2026-07-07 13:08，北京时间。
+最近核对时间：2026-07-07 13:15，北京时间。
 
 | 项目 | 状态 | 证据 | 结论 |
 |------|------|------|------|
-| 本地代码 | 已提交，未推送 | `main...origin/main [ahead 1]` | 本地有 1 个提交等待推送到 GitHub |
-| GitHub 推送 | 未完成 | 本机连接 `github.com:443` 失败 | 需要网络恢复或配置代理后执行 `git push origin main` |
-| Cloudflare Pages | 已有固定项目和地址 | `ot-questplatform.pages.dev` | 地址可保持不变，后续部署到同一 Pages 项目即可 |
+| 本地代码 | 已提交并推送 | `main...origin/main` | GitHub 已包含本轮代码和文档提交 |
+| GitHub 推送 | 已完成 | `git push origin main` 成功 | 远端 `main` 已更新 |
+| Cloudflare Pages | 已重新发布 | Production / branch `main` / source `957aa07` | 固定地址保持 `https://ot-questplatform.pages.dev` |
+| 前端 API 基址 | 已生效 | 线上 `js/app-config.js` 包含 CloudBase API 映射 | Pages 页面默认会请求 CloudBase 后端 |
 | CloudBase 版本 `001` | 100% 流量，状态 normal | CloudBase version list | 当前流量仍在旧版本 |
 | CloudBase 版本 `005` | 0% 流量，状态 normal | CloudBase version list | 已配置 Supabase，是目标切流版本 |
 | Supabase 隔离 | 已采用独立 schema | SQL 和配置均使用 `ot_questplatform` | 不应覆盖 `public` 或其他项目数据 |
 
 当前核心问题不是前端页面，也不是 Supabase 表隔离，而是 CloudBase Run 流量仍然指向旧版本 `001`。旧版本未注入数据库环境变量，数据库请求会回落到 `localhost:5432`，因此 `/survey/list`、登录、创建问卷、答卷查询等需要数据库的接口无法稳定工作。
+
+当前已经验证：
+
+- `https://ot-questplatform.pages.dev/page/login` 返回 200。
+- `https://ot-questplatform.pages.dev/js/app-config.js` 已包含 `ot-questplatform.pages.dev -> CloudBase API` 映射。
+- CloudBase `/api/qrcode?content=test` 返回 200。
+- CloudBase `/survey/list?...` 仍返回 500。
+- CloudBase 日志显示请求进入 `ot-questplatform-api-001` 容器。
 
 ## 3. 切流目标
 
@@ -213,14 +222,14 @@ git push origin main
 https://ot-questplatform.pages.dev
 ```
 
-如果 GitHub 暂时推不上，也可以在 Cloudflare 控制台或 Wrangler 中直接部署 `src/main/resources/static`，但长期推荐走 GitHub -> Cloudflare Pages 自动发布。
+如果 GitHub 暂时推不上，也可以在 Cloudflare 控制台或 Wrangler 中直接部署 `src/main/resources/static`，但长期推荐走 GitHub -> Cloudflare Pages 自动发布。本轮已使用 Wrangler 将静态前端发布到同一个 `ot-questplatform` Pages 项目，地址保持不变。
 
 ## 10. 完成标准
 
 可以把项目状态标记为“完整线上可用”的条件：
 
-- [ ] 最新本地提交已推送到 `origin/main`。
-- [ ] Cloudflare Pages 生产部署使用 `main` 分支最新提交。
+- [x] 最新本地提交已推送到 `origin/main`。
+- [x] Cloudflare Pages 生产部署已使用本轮静态前端提交。
 - [ ] CloudBase Run `ot-questplatform-api-005` 或后续等价新版本为 100% 流量。
 - [ ] `/api/qrcode` 返回 200。
 - [ ] `/survey/list` 返回 JSON 成功响应。
