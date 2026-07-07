@@ -103,7 +103,7 @@ SurveyService.update
 | 配置 | 来源 | 说明 |
 |------|------|------|
 | `DB_URL` | 环境变量 | JDBC 地址 |
-| `DB_USERNAME` | 环境变量 | PostgreSQL/Supabase 用户 |
+| `DB_USERNAME` | 环境变量 | PostgreSQL/Supabase 用户；Supabase pooler 常用 `<role>.<project-ref>` |
 | `DB_PASSWORD` | 环境变量 | PostgreSQL/Supabase 密码 |
 | `DB_SSLMODE` | 环境变量 | PostgreSQL SSL 模式，Supabase 线上建议 `require` |
 | `DB_SCHEMA` | 环境变量 | PostgreSQL schema，本项目线上使用 `ot_questplatform` |
@@ -127,4 +127,5 @@ SurveyService.update
 - 真实数据库密码不得提交。
 - 登录接口不得返回明文密码。
 - token 签名密钥不得提交。
+- Supabase 线上运行角色只授权 `ot_questplatform` schema；不要授予它 `public` 或其他项目 schema 的写权限。
 - 当前密码仍为明文存储，只适合作品演示和学习，不适合生产。

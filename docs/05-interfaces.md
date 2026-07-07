@@ -232,7 +232,7 @@ Authorization: Bearer <token>
 | 变量 | 必填 | 敏感 | 说明 |
 |------|------|------|------|
 | `DB_URL` | 否 | 否 | PostgreSQL/Supabase JDBC 地址 |
-| `DB_USERNAME` | 否 | 否 | PostgreSQL/Supabase 用户 |
+| `DB_USERNAME` | 否 | 否 | PostgreSQL/Supabase 用户；Supabase pooler 常用 `<role>.<project-ref>`，线上使用专用角色 |
 | `DB_PASSWORD` | 是 | 是 | PostgreSQL/Supabase 密码 |
 | `DB_SSLMODE` | 否 | 否 | PostgreSQL SSL 模式，Supabase 线上建议 `require` |
 | `DB_SCHEMA` | 否 | 否 | PostgreSQL schema，本项目线上使用 `ot_questplatform` |

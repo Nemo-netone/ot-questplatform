@@ -11,7 +11,7 @@
 | 改页面、交互、样式 | `docs/03-frontend-spec.md` |
 | 改后端业务 | `docs/04-backend-spec.md` |
 | 改接口字段或路径 | `docs/05-interfaces.md` |
-| 改数据库脚本 | `docs/database/quest-platform.sql` |
+| 改数据库脚本 | `docs/database/quest-platform-postgres.sql`, `docs/supabase-isolation.md` |
 | 改提交规范或流程 | `docs/conventions.md`, `docs/mvp-plan.md` |
 
 ## PR 提交规范
@@ -38,4 +38,6 @@
 
 ## 本地运行提醒
 
-本项目依赖 MySQL 和 Redis。数据库密码通过环境变量 `DB_PASSWORD` 注入，不写入 `application.yml`。
+本项目当前运行依赖 PostgreSQL/Supabase，不再依赖 Redis 登录态。数据库密码、CloudBase 环境变量、Supabase token、Cloudflare token 等敏感配置只能放在本机环境变量、平台控制台或用户级工具配置里，不写入仓库文件。
+
+旧版 `docs/database/quest-platform.sql` 是 MySQL 课程资料，包含 `DROP TABLE`，只用于历史追溯；线上和 Supabase 初始化必须使用 `docs/database/quest-platform-postgres.sql`。

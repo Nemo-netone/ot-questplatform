@@ -34,7 +34,7 @@ flowchart LR
 |------|------|------|------|
 | 本地代码 | 已提交并推送 | `main` 已推送到 `origin/main` | GitHub 包含本轮 SQL 和文档修复 |
 | GitHub 推送 | 已完成 | `git push origin main` 成功 | 远端 `main` 已更新 |
-| Cloudflare Pages | 已重新发布 | Production / branch `main` / source `957aa07` | 固定地址保持 `https://ot-questplatform.pages.dev` |
+| Cloudflare Pages | 已重新发布 | Production / branch `main` / source `c21f45b` | 固定地址保持 `https://ot-questplatform.pages.dev`；后续 docs-only 提交不改变静态资源内容 |
 | 前端 API 基址 | 已生效 | 线上 `js/app-config.js` 包含 CloudBase API 映射 | Pages 页面默认会请求 CloudBase 后端 |
 | CloudBase 版本 `008` | 100% 流量，状态 normal | CloudBase version list | 当前生产 API 已连接 Supabase |
 | Supabase 隔离 | 已采用独立 schema | SQL、角色和配置均使用 `ot_questplatform` | 不覆盖 `public` 或其他项目数据 |
@@ -234,7 +234,7 @@ https://ot-questplatform.pages.dev
 可以把项目状态标记为“完整线上可用”的条件：
 
 - [x] 最新本地提交已推送到 `origin/main`。
-- [x] Cloudflare Pages 生产部署已使用本轮静态前端提交。
+- [x] Cloudflare Pages 生产部署已使用当前静态前端内容。
 - [x] CloudBase Run `ot-questplatform-api-008` 为 100% 流量。
 - [x] `/api/qrcode` 返回 200。
 - [x] `/survey/list` 返回 JSON 成功响应，中文示例标题正常。

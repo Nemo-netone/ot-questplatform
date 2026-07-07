@@ -2,13 +2,13 @@
 
 ## 0. 进度看板
 
-**整体进度：2 / 4 里程碑 · 0 / 6 PR**
+**整体进度：3 / 4 里程碑 · 0 / 6 PR**
 
 | 里程碑 | 状态 | PR 进度 |
 |--------|------|---------|
 | M0 仓库整理 | 完成 | 0 / 1 |
 | M1 配置安全化 | 完成 | 0 / 1 |
-| M2 基础质量修复 | 进行中 | 0 / 2 |
+| M2 基础质量修复 | 完成 | 0 / 2 |
 | M3 展示增强 | 进行中 | 0 / 2 |
 
 ## 1. MVP 目标
@@ -54,12 +54,13 @@ Out：
 - [x] 登录接口不返回明文密码。
 - [x] 问卷更新保留原问卷 ID。
 - [ ] 增加最小 MockMvc 或 Service 测试。
-- [ ] **验收**：compile/package 已通过，关键流程待 Supabase/CloudBase 配置后手动验证。
+- [x] **验收**：`mvn test` 已通过；CloudBase + Supabase 线上关键流程已完成可回收 API 验收。
 
 ### M3 · 展示增强
 
 - [x] 增加 Cloudflare Pages 静态预览部署说明。
 - [x] 完成 Cloudflare Pages 发布并记录生产 URL。
+- [x] 完成 CloudBase Run + Supabase 线上部署并记录生产 API 状态。
 - [ ] 增加项目截图。
 - [ ] 增加 Docker Compose 或更完整本地启动说明。
 - [ ] 增加架构图导出图片。
@@ -84,6 +85,7 @@ Out：
 | 数据库脚本位置 | `docs/database` | README 可直接引用，仓库独立可运行 |
 | 凭据管理 | 环境变量 | 避免提交本机密码 |
 | 文档组织 | SSR 01-05 | 让需求、架构、接口和规范可追溯 |
+| 线上数据隔离 | Supabase schema `ot_questplatform` + 专用角色 | 不覆盖 `public` 或其他项目数据 |
 
 ## 6. 风险与对策
 
@@ -99,6 +101,6 @@ Out：
 - [x] `mvn -DskipTests compile`
 - [x] `mvn clean package -DskipTests`
 - [x] `mvn test`
-- [ ] 本地导入数据库脚本成功。
-- [ ] 设置环境变量后应用能启动。
-- [ ] 后台登录、创建问卷、提交答卷、查看答卷通过。
+- [x] Supabase 执行 PostgreSQL 初始化脚本成功。
+- [x] CloudBase 设置环境变量后应用能启动。
+- [x] 后台登录、创建问卷、提交答卷、查看答卷通过线上 API 验收。

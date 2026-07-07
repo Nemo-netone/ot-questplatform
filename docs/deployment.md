@@ -18,7 +18,7 @@
 
 具体某一次部署的短 ID、快照地址和提交号以 Cloudflare Pages 控制台或 `wrangler pages deployment list --project-name ot-questplatform` 为准，不在文档中长期固化，避免记录过期。
 
-最近一次已验证的静态前端发布：2026-07-07 13:13，北京时间，Production / `main` / source `957aa07`，快照地址为 `https://439b972e.ot-questplatform.pages.dev`。默认生产地址仍是 `https://ot-questplatform.pages.dev`。
+最近一次已验证的静态前端发布：2026-07-07 13:52，北京时间，Production / `main` / source `c21f45b`，快照地址为 `https://86662564.ot-questplatform.pages.dev`。默认生产地址仍是 `https://ot-questplatform.pages.dev`。
 
 最近一次已验证的后端生产发布：2026-07-07 13:39，北京时间，CloudBase Run `ot-questplatform-api-008`，100% 流量，状态 `normal`。
 

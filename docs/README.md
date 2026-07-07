@@ -35,7 +35,7 @@
 | 6 | [conventions.md](conventions.md) | 可检查的编码和文档规范 |
 | 7 | [mvp-plan.md](mvp-plan.md) | 里程碑、PR 映射、风险 |
 | 8 | [database/quest-platform-postgres.sql](database/quest-platform-postgres.sql) | Supabase/PostgreSQL 初始化脚本 |
-| 9 | [deployment.md](deployment.md) | Cloudflare Pages 静态预览部署策略 |
+| 9 | [deployment.md](deployment.md) | Cloudflare Pages、CloudBase Run、Supabase 的完整部署和验证策略 |
 | 10 | [supabase-isolation.md](supabase-isolation.md) | Supabase 多项目数据隔离策略 |
 | 11 | [operations-runbook.md](operations-runbook.md) | 线上运行、排障、切流和完整功能验收清单 |
 
