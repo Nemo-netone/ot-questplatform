@@ -82,15 +82,21 @@ https://ot-questplatform.pages.dev/page/login.html?apiBase=https://<cloudbase-ap
 | 容器端口 | `8080` |
 | 公开 API 基址 | `https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com` |
 
-当前版本状态（2026-07-07）：
+当前版本状态（最近核对：2026-07-07 13:08，北京时间）：
 
 | 版本 | 流量 | 状态 | 说明 |
 |------|------|------|------|
-| `ot-questplatform-api-001` | 100% | normal | 当前线上版本；未注入数据库环境变量，会回落到 `localhost:5432`，数据库接口会 500 |
+| `ot-questplatform-api-001` | 100% | normal | 当前线上流量版本；未注入数据库环境变量，会回落到 `localhost:5432`，数据库接口会 500 |
 | `ot-questplatform-api-002` | 0% | normal | 历史构建版本，保留作镜像来源/回溯 |
 | `ot-questplatform-api-005` | 0% | normal | 已注入 Supabase/`ot_questplatform` 环境变量，目标切流版本 |
 
-CloudBase CLI 在当前旧版 CloudBase Run 环境中可以创建版本，但 `run:deprecated version modify`、`run service:config` 和新 `cloudrun traffic promote` 对该服务的流量切换不稳定。当前需要在控制台把 `ot-questplatform-api-005` 切到 100% 流量：
+CloudBase CLI 在当前旧版 CloudBase Run 环境中可以创建和查询版本，但流量切换不可靠。已经验证过的失败现象包括：
+
+- `ModifyCloudBaseRunServerFlowConf` 返回 `InvalidParameter.ServiceNotExist`。
+- `cloudrun traffic` 要求存在正在进行的灰度发布版本，但当前发布单记录的 release version 不是 `005`。
+- 直接 `ReleaseGray` 指向 `005` 返回服务状态异常。
+
+因此当前需要在控制台把 `ot-questplatform-api-005` 切到 100% 流量：
 
 ```text
 https://tcb.cloud.tencent.com/dev?envId=meta-d5gh4ds014005aff1#/platform-run/service/detail?serverName=ot-questplatform-api&tabId=deploy&envId=meta-d5gh4ds014005aff1
@@ -101,6 +107,8 @@ https://tcb.cloud.tencent.com/dev?envId=meta-d5gh4ds014005aff1#/platform-run/ser
 1. 打开 CloudBase Run 服务 `ot-questplatform-api` 的版本/发布页面。
 2. 将版本 `ot-questplatform-api-005` 发布为全量版本或调整到 100% 流量。
 3. 保留 `ot-questplatform-api-001` 作为临时回滚点，确认验证通过后再清理旧版本。
+
+更完整的排障路径和逐项验收见 [operations-runbook.md](operations-runbook.md)。
 
 已经配置的 HTTP 访问路由包括 `/user/login`、`/user/register`、`/user/logout`、`/survey/list`、`/survey/detail`、`/survey/updateStatus`、`/survey/remove`、`/survey/restore`、`/survey/edit`、`/answer/add`、`/answer/list`、`/api/qrcode`。保留旧的 `/api/ai/chat` 和 `/api/ai/chat-http` 云函数路由，不属于本项目后端。
 

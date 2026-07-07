@@ -48,6 +48,23 @@ Browser login form -> /user/login -> JWT-like token -> Authorization Bearer head
 | 构建/部署 | Maven, Docker | 依赖管理、编译、打包、CloudBase 容器部署 |
 | 工具库 | PageHelper, ZXing, FastJSON | 分页、二维码、JSON 处理 |
 
+## 项目涉及的工程知识
+
+这个项目不是单一的“写几个页面”，而是一条完整的小型 Web 系统链路：
+
+| 知识层 | 本项目里的体现 | 学习定位 |
+|--------|----------------|----------|
+| HTTP 与前后端交互 | Layui/jQuery 页面通过 Ajax 调用 `/user`、`/survey`、`/answer`、`/api/qrcode` | 理解浏览器如何请求后端 API |
+| Spring MVC 分层 | `controller -> service -> dao/mapper -> database` | 后端项目最常见的分层结构 |
+| 登录态与鉴权 | 登录后生成 HMAC token，后台写操作校验 `Authorization: Bearer ...` | 理解“登录后为什么接口知道你是谁” |
+| MyBatis 数据访问 | Java Mapper 接口 + XML SQL | 理解业务对象和 SQL 表记录如何互相映射 |
+| 数据库建模 | `user/survey/question/option/answer` 五张核心表 | 理解问卷、题目、选项、答卷之间的关系 |
+| Supabase 数据隔离 | 线上固定使用 schema `ot_questplatform` | 理解同一数据库项目中如何隔离不同业务 |
+| 静态托管 | Cloudflare Pages 托管 `src/main/resources/static` | 理解前端静态资源如何独立发布 |
+| 容器化后端 | Dockerfile 构建 Spring Boot API，部署到 CloudBase Run | 理解 Java 后端如何在线上作为服务运行 |
+| 跨域与环境变量 | `CORS_ALLOWED_ORIGINS`、`DB_*`、`APP_AUTH_SECRET` | 理解本地/线上配置为什么不能写死 |
+| 发布验收 | 通过二维码、列表、登录、创建、填写、答卷查询逐项验证 | 从“代码能跑”升级到“线上功能可验收” |
+
 ## 项目结构
 
 ```text
@@ -179,6 +196,8 @@ http://localhost:8080/index.html
 
 注意：Cloudflare Pages 只托管静态 HTML/CSS/JS，不运行 Spring Boot API。完整业务流程需要把 Java 后端部署到 CloudBase Run，并连接 Supabase PostgreSQL。部署细节见 [docs/deployment.md](docs/deployment.md)。
 
+当前完整线上功能还依赖 CloudBase Run 后端切换到已配置 Supabase 环境变量的版本。当前运行状态、切流步骤和功能验收清单见 [docs/operations-runbook.md](docs/operations-runbook.md)。
+
 线上 Pages 域名 `https://ot-questplatform.pages.dev` 会在 `src/main/resources/static/js/app-config.js` 中自动使用 CloudBase API：
 
 ```text
@@ -218,6 +237,7 @@ https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com
 8. [docs/mvp-plan.md](docs/mvp-plan.md)
 9. [docs/deployment.md](docs/deployment.md)
 10. [docs/supabase-isolation.md](docs/supabase-isolation.md)
+11. [docs/operations-runbook.md](docs/operations-runbook.md)
 
 ## 当前边界
 

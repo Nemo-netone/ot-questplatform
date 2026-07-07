@@ -37,6 +37,7 @@
 | 8 | [database/quest-platform-postgres.sql](database/quest-platform-postgres.sql) | Supabase/PostgreSQL 初始化脚本 |
 | 9 | [deployment.md](deployment.md) | Cloudflare Pages 静态预览部署策略 |
 | 10 | [supabase-isolation.md](supabase-isolation.md) | Supabase 多项目数据隔离策略 |
+| 11 | [operations-runbook.md](operations-runbook.md) | 线上运行、排障、切流和完整功能验收清单 |
 
 ## 关键术语
 
