@@ -79,9 +79,19 @@ public class SurveyController {
     @Autowired
     private QuestionService questionServer;
 
+    @GetMapping("detail")
+    public Result<JSONObject> detail(@RequestParam("id") long id,
+                                     @RequestParam("type") String type) {
+        return getSurveyDetail(id, type);
+    }
+
     @GetMapping("{id}/{type}")
     public Result<JSONObject> getById(@PathVariable("id") long id,
                                       @PathVariable("type") String type) {
+        return getSurveyDetail(id, type);
+    }
+
+    private Result<JSONObject> getSurveyDetail(long id, String type) {
         // 获取问卷
         Survey survey = surveyServer.getById(id);
         if (Objects.isNull(survey)) {

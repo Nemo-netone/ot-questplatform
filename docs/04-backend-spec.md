@@ -105,6 +105,8 @@ SurveyService.update
 | `DB_URL` | 环境变量 | JDBC 地址 |
 | `DB_USERNAME` | 环境变量 | PostgreSQL/Supabase 用户 |
 | `DB_PASSWORD` | 环境变量 | PostgreSQL/Supabase 密码 |
+| `DB_SSLMODE` | 环境变量 | PostgreSQL SSL 模式，Supabase 线上建议 `require` |
+| `DB_SCHEMA` | 环境变量 | PostgreSQL schema，本项目线上使用 `ot_questplatform` |
 | `APP_AUTH_SECRET` | 环境变量 | token 签名密钥 |
 | `APP_AUTH_TOKEN_TTL_SECONDS` | 环境变量 | token 有效期 |
 | `CORS_ALLOWED_ORIGINS` | 环境变量 | 允许访问 API 的前端域名 |

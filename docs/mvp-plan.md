@@ -91,7 +91,7 @@ Out：
 |------|------|------|
 | Supabase 密码写入仓库 | 泄露线上配置 | 使用环境变量和 `.env.example` |
 | token 签名密钥过短或入库 | 登录态可被伪造 | CloudBase 环境变量配置长随机值 |
-| 初始化 SQL 含 DROP TABLE | 误删已有数据 | 文档注明仅用于本地演示 |
+| 初始化 SQL 误删已有数据 | 影响 Supabase 其他项目或本项目历史数据 | 使用独立 schema `ot_questplatform`，线上脚本不包含 `DROP TABLE` / `TRUNCATE` / `DROP SCHEMA` |
 | 密码明文存储 | 不适合生产 | docs 标为技术债，后续引入 BCrypt |
 
 ## 7. 验收清单

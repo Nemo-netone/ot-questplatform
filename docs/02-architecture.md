@@ -77,7 +77,7 @@ survey_edit.html
 
 ```text
 answer.html
-  -> GET /survey/{id}/answer
+  -> GET /survey/detail?id={id}&type=answer
   -> SurveyController.getById
   -> QuestionService.getQuestion
   -> question + option tables

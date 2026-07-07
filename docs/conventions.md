@@ -39,7 +39,8 @@
 | 旧版 MySQL 脚本只作课程资料追溯 | 不作为当前云部署事实源 |
 | SQL 文件使用 UTF-8 | 避免中文乱码 |
 | 答卷整段 JSON 使用 `TEXT` | 避免 255 字符截断 |
-| 生产迁移不使用 `DROP TABLE` 初始化脚本 | 当前脚本仅适合本地演示 |
+| Supabase 使用独立 schema `ot_questplatform` | 不与 `public` 或其他项目 schema 混放 |
+| 线上初始化脚本不得包含 `DROP TABLE` / `TRUNCATE` / `DROP SCHEMA` | 默认只创建缺失对象和补充缺失示例数据 |
 
 ## 5. 前端
 

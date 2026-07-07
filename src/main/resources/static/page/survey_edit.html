@@ -232,10 +232,13 @@
         // 加载问卷数据
         function loadSurveyData(id) {
             layer.load(1);
-            var url = "/survey/" + id + "/" + type;
             $.ajax({
-                url: QuestConfig.apiUrl(url),
+                url: QuestConfig.apiUrl('/survey/detail'),
                 type: 'GET',
+                data: {
+                    id: id,
+                    type: type
+                },
                 success: function(res) {
                     layer.closeAll('loading');
                     if(res) {

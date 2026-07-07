@@ -9,7 +9,7 @@ Browser static pages
   -> Spring MVC Controller
   -> Service business orchestration
   -> MyBatis Mapper XML
-  -> PostgreSQL / Supabase quest_platform
+  -> PostgreSQL / Supabase schema ot_questplatform
 
 Auth flow:
 Browser login form -> /user/login -> JWT-like token -> Authorization Bearer header
@@ -20,7 +20,7 @@ Browser login form -> /user/login -> JWT-like token -> Authorization Bearer head
 | 功能 | 说明 | 主要入口 |
 |------|------|----------|
 | 用户登录/注册 | 后台用户登录、注册、退出 | `/user/login`, `/user/register`, `/user/logout` |
-| 问卷管理 | 查询、创建、编辑、启停、删除、恢复问卷 | `/survey/*` |
+| 问卷管理 | 查询、创建、编辑、启停、删除、恢复问卷 | `/survey/list`, `/survey/detail`, `/survey/edit` |
 | 问卷填写 | 公开填写已启用问卷，提交答卷 | `/page/answer.html`, `/answer/add` |
 | 答卷查看 | 后台分页查看答卷和答题详情 | `/page/answer_table.html`, `/answer/list` |
 | 二维码分享 | 根据问卷链接生成二维码图片 | `/api/qrcode` |
@@ -87,7 +87,7 @@ Browser login form -> /user/login -> JWT-like token -> Authorization Bearer head
 |------|----------|------|
 | JDK | 8 | 项目源码目标版本为 Java 8 |
 | Maven | 3.6+ | 编译与运行 |
-| PostgreSQL | 14+ | 本地库名建议 `quest_platform`，线上可用 Supabase |
+| PostgreSQL | 14+ | 本地库名建议 `quest_platform`，线上 Supabase 使用独立 schema `ot_questplatform` |
 
 ### 2. 初始化数据库
 
@@ -105,6 +105,8 @@ docs/database/quest-platform-postgres.sql
 
 旧版 MySQL 脚本仍保留在 `docs/database/quest-platform.sql`，用于课程资料追溯。当前云部署推荐 PostgreSQL 脚本。脚本会创建并初始化 `user`、`survey`、`question`、`option`、`answer` 表。示例系统账号见 [docs/05-interfaces.md](docs/05-interfaces.md#4-默认示例账号)。
 
+Supabase 中本项目使用独立 schema `ot_questplatform`。该脚本只会在这个 schema 内创建缺失对象和补充缺失的示例数据，不会删除、清空或覆盖已有表数据，也不会清理 `public` schema 或其他项目表。隔离策略见 [docs/supabase-isolation.md](docs/supabase-isolation.md)。
+
 ### 3. 配置本地环境变量
 
 复制 `.env.example` 作为本地参考，但不要提交 `.env`。
@@ -115,6 +117,8 @@ PowerShell 示例：
 $env:DB_URL="jdbc:postgresql://localhost:5432/quest_platform"
 $env:DB_USERNAME="postgres"
 $env:DB_PASSWORD="<your-postgres-password>"
+$env:DB_SCHEMA="ot_questplatform"
+$env:DB_SSLMODE="prefer"
 $env:APP_AUTH_SECRET="<long-random-secret>"
 $env:CORS_ALLOWED_ORIGINS="http://localhost:8080,https://ot-questplatform.pages.dev"
 ```
@@ -122,8 +126,10 @@ $env:CORS_ALLOWED_ORIGINS="http://localhost:8080,https://ot-questplatform.pages.
 Supabase JDBC 地址通常从 Supabase Dashboard 的数据库连接页面复制，形态类似：
 
 ```text
-jdbc:postgresql://<host>:5432/postgres?sslmode=require
+jdbc:postgresql://<host>:5432/postgres
 ```
+
+线上 Supabase 的 SSL 和 schema 建议用独立环境变量配置：`DB_SSLMODE=require`、`DB_SCHEMA=ot_questplatform`。
 
 ### 4. 启动应用
 
@@ -173,6 +179,14 @@ http://localhost:8080/index.html
 
 注意：Cloudflare Pages 只托管静态 HTML/CSS/JS，不运行 Spring Boot API。完整业务流程需要把 Java 后端部署到 CloudBase Run，并连接 Supabase PostgreSQL。部署细节见 [docs/deployment.md](docs/deployment.md)。
 
+线上 Pages 域名 `https://ot-questplatform.pages.dev` 会在 `src/main/resources/static/js/app-config.js` 中自动使用 CloudBase API：
+
+```text
+https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com
+```
+
+本地开发仍默认使用同源 API；如需临时切换后端，可在页面地址追加 `?apiBase=<api-origin>`。
+
 ## 配置与密钥策略
 
 `application.yml` 使用环境变量读取敏感配置：
@@ -182,6 +196,8 @@ http://localhost:8080/index.html
 | `DB_URL` | 本机 PostgreSQL JDBC | 否 | PostgreSQL/Supabase JDBC 地址 |
 | `DB_USERNAME` | `postgres` | 否 | PostgreSQL/Supabase 用户名 |
 | `DB_PASSWORD` | 空 | 是 | PostgreSQL/Supabase 密码 |
+| `DB_SSLMODE` | `prefer` | 否 | PostgreSQL SSL 模式；Supabase 线上建议 `require` |
+| `DB_SCHEMA` | `ot_questplatform` | 否 | PostgreSQL schema；线上隔离本项目数据 |
 | `APP_AUTH_SECRET` | `change-me-in-production` | 是 | token 签名密钥，线上必须改成长随机值 |
 | `APP_AUTH_TOKEN_TTL_SECONDS` | `86400` | 否 | 登录 token 有效期 |
 | `CORS_ALLOWED_ORIGINS` | 本地和 Pages 地址 | 否 | 允许访问后端 API 的前端域名 |
@@ -201,6 +217,7 @@ http://localhost:8080/index.html
 7. [docs/conventions.md](docs/conventions.md)
 8. [docs/mvp-plan.md](docs/mvp-plan.md)
 9. [docs/deployment.md](docs/deployment.md)
+10. [docs/supabase-isolation.md](docs/supabase-isolation.md)
 
 ## 当前边界
 

@@ -311,7 +311,7 @@
                     btn: ['确定','取消']
                 }, function(index) {
                     $.ajax({
-                        url: QuestConfig.apiUrl('/survey/remove/'),
+                        url: QuestConfig.apiUrl('/survey/remove'),
                         type: 'POST',
                         headers: QuestConfig.authHeaders(),
                         contentType: 'application/json',
@@ -346,7 +346,7 @@
                 btn: ['确定','取消']
             }, function(index) {
                 $.ajax({
-                    url: QuestConfig.apiUrl('/survey/restore/'),
+                    url: QuestConfig.apiUrl('/survey/restore'),
                     type: 'POST',
                     headers: QuestConfig.authHeaders(),
                     contentType: 'application/json',

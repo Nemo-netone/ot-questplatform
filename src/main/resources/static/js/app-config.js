@@ -1,7 +1,11 @@
 (function(window) {
     var query = new URLSearchParams(window.location.search);
     var queryApiBase = query.get('apiBase');
-    var configuredApiBase = window.QUEST_API_BASE_URL || localStorage.getItem('QUEST_API_BASE_URL') || '';
+    var productionApiBases = {
+        'ot-questplatform.pages.dev': 'https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com'
+    };
+    var defaultApiBase = productionApiBases[window.location.hostname] || '';
+    var configuredApiBase = window.QUEST_API_BASE_URL || localStorage.getItem('QUEST_API_BASE_URL') || defaultApiBase;
 
     if (queryApiBase !== null) {
         configuredApiBase = queryApiBase;
@@ -35,6 +39,7 @@
 
     window.QuestConfig = {
         apiBaseUrl: trimTrailingSlash(configuredApiBase),
+        defaultApiBaseUrl: trimTrailingSlash(defaultApiBase),
         apiUrl: apiUrl,
         getToken: getToken,
         authHeaders: authHeaders

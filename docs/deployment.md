@@ -26,7 +26,13 @@ Cloudflare Pages 发布后可以打开静态页面，例如：
 - `https://ot-questplatform.pages.dev/page/login.html`
 - `https://ot-questplatform.pages.dev/page/answer.html`
 
-静态页面通过 `src/main/resources/static/js/app-config.js` 中的 `QuestConfig.apiUrl()` 访问后端。未配置 API 基址时，请求会打到同域名；部署 CloudBase 后，应把 `QUEST_API_BASE_URL` 或 `localStorage.QUEST_API_BASE_URL` 设置为 CloudBase 后端地址。
+静态页面通过 `src/main/resources/static/js/app-config.js` 中的 `QuestConfig.apiUrl()` 访问后端。线上 Pages 域名会自动使用当前 CloudBase API：
+
+```text
+https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com
+```
+
+本地开发未配置 API 基址时，请求会打到同域名；如需临时切换后端，可用 `QUEST_API_BASE_URL`、`localStorage.QUEST_API_BASE_URL` 或地址栏 `apiBase` 参数覆盖。
 
 临时测试远程 API 可以在浏览器地址后追加：
 
@@ -48,7 +54,7 @@ https://ot-questplatform.pages.dev/page/login.html?apiBase=https://<cloudbase-ap
 
 完整功能上线需要三件事：
 
-1. Supabase 已执行 `docs/database/quest-platform-postgres.sql`。
+1. Supabase 已执行 `docs/database/quest-platform-postgres.sql`，业务表位于独立 schema `ot_questplatform`，不与 `public` schema 或其他项目表混用。
 2. CloudBase Run 已部署本仓库 Dockerfile 构建出的 Spring Boot API，并配置 `DB_*`、`APP_AUTH_SECRET`、`CORS_ALLOWED_ORIGINS`。
 3. Cloudflare Pages 前端通过 `apiBase` 或 `QUEST_API_BASE_URL` 指向 CloudBase 后端公开域名。
 
@@ -58,12 +64,45 @@ https://ot-questplatform.pages.dev/page/login.html?apiBase=https://<cloudbase-ap
 
 | 环境变量 | 说明 |
 |----------|------|
-| `DB_URL` | Supabase PostgreSQL JDBC 地址，通常需要 `sslmode=require` |
+| `DB_URL` | Supabase PostgreSQL JDBC 地址，不在这里拼接 query 参数 |
 | `DB_USERNAME` | Supabase 数据库用户名 |
 | `DB_PASSWORD` | Supabase 数据库密码 |
+| `DB_SSLMODE` | Supabase 线上建议 `require` |
+| `DB_SCHEMA` | 本项目固定使用 `ot_questplatform` |
 | `APP_AUTH_SECRET` | token 签名密钥，必须使用长随机字符串 |
 | `APP_AUTH_TOKEN_TTL_SECONDS` | 登录有效期，默认 `86400` |
 | `CORS_ALLOWED_ORIGINS` | 允许访问 API 的前端域名，例如 `https://ot-questplatform.pages.dev` |
+
+当前 CloudBase Run 服务：
+
+| 项目 | 值 |
+|------|----|
+| 环境 ID | `meta-d5gh4ds014005aff1` |
+| 服务名 | `ot-questplatform-api` |
+| 容器端口 | `8080` |
+| 公开 API 基址 | `https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com` |
+
+当前版本状态（2026-07-07）：
+
+| 版本 | 流量 | 状态 | 说明 |
+|------|------|------|------|
+| `ot-questplatform-api-001` | 100% | normal | 当前线上版本；未注入数据库环境变量，会回落到 `localhost:5432`，数据库接口会 500 |
+| `ot-questplatform-api-002` | 0% | normal | 历史构建版本，保留作镜像来源/回溯 |
+| `ot-questplatform-api-005` | 0% | normal | 已注入 Supabase/`ot_questplatform` 环境变量，目标切流版本 |
+
+CloudBase CLI 在当前旧版 CloudBase Run 环境中可以创建版本，但 `run:deprecated version modify`、`run service:config` 和新 `cloudrun traffic promote` 对该服务的流量切换不稳定。当前需要在控制台把 `ot-questplatform-api-005` 切到 100% 流量：
+
+```text
+https://tcb.cloud.tencent.com/dev?envId=meta-d5gh4ds014005aff1#/platform-run/service/detail?serverName=ot-questplatform-api&tabId=deploy&envId=meta-d5gh4ds014005aff1
+```
+
+控制台操作建议：
+
+1. 打开 CloudBase Run 服务 `ot-questplatform-api` 的版本/发布页面。
+2. 将版本 `ot-questplatform-api-005` 发布为全量版本或调整到 100% 流量。
+3. 保留 `ot-questplatform-api-001` 作为临时回滚点，确认验证通过后再清理旧版本。
+
+已经配置的 HTTP 访问路由包括 `/user/login`、`/user/register`、`/user/logout`、`/survey/list`、`/survey/detail`、`/survey/updateStatus`、`/survey/remove`、`/survey/restore`、`/survey/edit`、`/answer/add`、`/answer/list`、`/api/qrcode`。保留旧的 `/api/ai/chat` 和 `/api/ai/chat-http` 云函数路由，不属于本项目后端。
 
 Supabase 初始化脚本：
 
@@ -71,13 +110,38 @@ Supabase 初始化脚本：
 docs/database/quest-platform-postgres.sql
 ```
 
-当前本机 CloudBase CLI 尚未登录。可用以下方式授权：
+该脚本会创建并使用独立 schema `ot_questplatform`，只在这个 schema 内创建缺失对象和补充缺失的示例数据。脚本不包含 `DROP TABLE`、`TRUNCATE` 或 `DROP SCHEMA`，不会清理 `public` schema、其他 schema 或其他项目表。更完整的数据隔离说明见 `docs/supabase-isolation.md`。
+
+Supabase 平台 access token 只能管理项目，不能替代 PostgreSQL 数据库密码。完整上线前必须在 Supabase Dashboard 的数据库设置页复制或重置数据库密码，或创建专用数据库角色，并把该密码配置到 CloudBase Run 的 `DB_PASSWORD`。
+
+推荐 CloudBase Run 部署命令：
 
 ```powershell
-tcb login
+$env:DB_PASSWORD="<supabase-database-password>"
+$env:APP_AUTH_SECRET="<long-random-secret>"
+
+tcb run deploy `
+  -e meta-d5gh4ds014005aff1 `
+  --serviceName ot-questplatform-api `
+  --path . `
+  --containerPort 8080 `
+  --override `
+  --noConfirm `
+  --envParams "DB_URL=jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres&DB_USERNAME=quest_app&DB_PASSWORD=$env:DB_PASSWORD&DB_SSLMODE=require&DB_SCHEMA=ot_questplatform&APP_AUTH_SECRET=$env:APP_AUTH_SECRET&APP_AUTH_TOKEN_TTL_SECONDS=86400&CORS_ALLOWED_ORIGINS=https://ot-questplatform.pages.dev" `
+  --remark "quest platform production api" `
+  --json
 ```
 
-或在控制台登录后，通过 CloudBase Run 连接 GitHub 仓库并选择本仓库根目录的 `Dockerfile` 进行云端构建。
+如果通过控制台发布，也需要在 CloudBase Run 服务版本配置里设置同样的环境变量。
+
+CloudBase 切流后用以下接口验证：
+
+```powershell
+Invoke-WebRequest -Uri 'https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com/api/qrcode?content=test' -UseBasicParsing
+Invoke-WebRequest -Uri 'https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com/survey/list?isDelete=0&title=&page=1&pageSize=5' -UseBasicParsing
+```
+
+其中 `/api/qrcode` 只验证服务可访问；`/survey/list` 会真实访问 Supabase，是判断数据库环境变量是否生效的关键接口。
 
 ## 5. Wrangler 发布命令
 
@@ -119,5 +183,6 @@ wrangler pages deploy src/main/resources/static `
 - [ ] Pages 项目名仍为 `ot-questplatform`。
 - [ ] 发布目录仍为 `src/main/resources/static`。
 - [ ] 仓库没有提交 `.env`、token、数据库密码或云服务密钥。
-- [ ] Supabase 已执行 `docs/database/quest-platform-postgres.sql`。
-- [ ] CloudBase Run 已配置 `DB_*`、`APP_AUTH_SECRET` 和 `CORS_ALLOWED_ORIGINS`。
+- [ ] Supabase 已执行 `docs/database/quest-platform-postgres.sql`，并确认表在 `ot_questplatform` schema 中。
+- [ ] Supabase SQL Editor 中没有执行针对 `public` schema 或其他项目 schema 的删除、清空、重建操作。
+- [ ] CloudBase Run 已配置 `DB_*`、`DB_SSLMODE`、`DB_SCHEMA`、`APP_AUTH_SECRET` 和 `CORS_ALLOWED_ORIGINS`。

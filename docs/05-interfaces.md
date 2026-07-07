@@ -31,7 +31,8 @@
 | POST | `/survey/updateStatus` | 更新问卷状态 | 是 |
 | POST | `/survey/remove` | 逻辑删除问卷 | 是 |
 | POST | `/survey/restore` | 恢复问卷 | 是 |
-| GET | `/survey/{id}/{type}` | 获取问卷详情 | 视 type 而定 |
+| GET | `/survey/detail?id={id}&type={type}` | 获取问卷详情，CloudBase 线上推荐路径 | 视 type 而定 |
+| GET | `/survey/{id}/{type}` | 获取问卷详情，兼容旧路径 | 视 type 而定 |
 | POST | `/survey/edit` | 创建/编辑问卷 | 是 |
 | POST | `/answer/add` | 提交答卷 | 否 |
 | POST | `/answer/list` | 答卷列表 | 是 |
@@ -138,7 +139,9 @@ Authorization: Bearer <token>
 
 ### 3.4 获取问卷详情
 
-`GET /survey/{id}/{type}`
+`GET /survey/detail?id={id}&type={type}`
+
+旧路径 `GET /survey/{id}/{type}` 仍保留兼容，但 CloudBase Run HTTP 访问路由建议使用精确路径 `/survey/detail`，避免动态路径在网关层匹配不稳定。
 
 `type` 可取：
 
@@ -231,6 +234,8 @@ Authorization: Bearer <token>
 | `DB_URL` | 否 | 否 | PostgreSQL/Supabase JDBC 地址 |
 | `DB_USERNAME` | 否 | 否 | PostgreSQL/Supabase 用户 |
 | `DB_PASSWORD` | 是 | 是 | PostgreSQL/Supabase 密码 |
+| `DB_SSLMODE` | 否 | 否 | PostgreSQL SSL 模式，Supabase 线上建议 `require` |
+| `DB_SCHEMA` | 否 | 否 | PostgreSQL schema，本项目线上使用 `ot_questplatform` |
 | `APP_AUTH_SECRET` | 是 | 是 | token 签名密钥 |
 | `APP_AUTH_TOKEN_TTL_SECONDS` | 否 | 否 | token 有效期 |
 | `CORS_ALLOWED_ORIGINS` | 否 | 否 | 允许访问 API 的前端域名 |
