@@ -162,7 +162,7 @@ Invoke-WebRequest -Uri 'https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.ap
 Invoke-WebRequest -Uri 'https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com/survey/list?isDelete=0&title=&page=1&pageSize=5' -UseBasicParsing
 ```
 
-其中 `/api/qrcode` 只验证服务可访问；`/survey/list` 会真实访问 Supabase，是判断数据库环境变量是否生效的关键接口。2026-07-07 已验证 `/api/qrcode`、`/survey/list`、`/user/login` 和一次可回收的问卷创建/启用/答卷/查询/删除/恢复流程均成功。
+其中 `/api/qrcode` 只验证服务可访问；`/survey/list` 会真实访问 Supabase，是判断数据库环境变量是否生效的关键接口。2026-07-07 14:10 已复验 `/api/qrcode`、`/survey/list`、`/user/login` 和一次可回收的问卷创建/编辑/启用/答卷/查询/删除/恢复流程均成功；临时问卷最终再次逻辑删除，前台列表不可见。
 
 ## 5. Wrangler 发布命令
 

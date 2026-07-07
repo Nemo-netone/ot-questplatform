@@ -28,7 +28,7 @@ flowchart LR
 
 ## 2. 当前运行状态
 
-最近核对时间：2026-07-07 13:45，北京时间。
+最近核对时间：2026-07-07 14:10，北京时间。
 
 | 项目 | 状态 | 证据 | 结论 |
 |------|------|------|------|
@@ -50,7 +50,27 @@ flowchart LR
 - CloudBase `/api/qrcode?content=test` 返回 200。
 - CloudBase `/survey/list?...` 返回 200，示例问卷中文标题正常。
 - CloudBase `/user/login` 返回 `code=200` 且 token 非空，不返回密码字段。
-- 已完成一轮可回收 API 验收：创建问卷、读取详情、启用、提交答卷、查询答卷、停用、删除、恢复，并清理临时测试数据。
+- 已完成一轮可回收 API 验收：创建问卷、读取详情、编辑、启用、提交答卷、查询答卷、停用、删除、恢复，并将临时问卷再次逻辑删除，前台列表不可见。
+
+### 2.1 最近复验记录
+
+2026-07-07 14:10，北京时间，使用线上固定地址和 CloudBase 生产 API 完成一次自动化 API E2E 复验。
+
+| 环节 | 结果 | 说明 |
+|------|------|------|
+| Cloudflare Pages 登录页 | 通过 | `https://ot-questplatform.pages.dev/page/login` 返回 200 |
+| Pages API 配置 | 通过 | `js/app-config.js` 指向 CloudBase API 基址 |
+| 二维码接口 | 通过 | `/api/qrcode?content=e2e` 返回 `image/png` |
+| 后台登录 | 通过 | `/user/login` 返回 `code=200`，token 非空，不返回密码 |
+| 问卷列表 | 通过 | `/survey/list` 返回 3 条示例问卷 |
+| 创建问卷 | 通过 | 临时问卷 `surveyId=6` 创建成功 |
+| 详情与编辑 | 通过 | `type=update` 可读取，`/survey/edit` 可更新标题和题目 |
+| 启用与填写 | 通过 | 启用后 `type=answer` 可读取，并可提交答卷 |
+| 答卷查询 | 通过 | `/answer/list` 可查到刚提交的答卷 |
+| 删除与恢复 | 通过 | `/survey/remove` 和 `/survey/restore` 均成功 |
+| 最终状态 | 通过 | 临时问卷再次逻辑删除，普通列表不可见，仅保留在本项目 `ot_questplatform` schema 内 |
+
+这次复验不操作 `public` schema，不执行 `DROP`、`TRUNCATE` 或跨项目清理。
 
 ## 3. 当前生产版本
 
