@@ -32,8 +32,8 @@ flowchart LR
 
 | 项目 | 状态 | 证据 | 结论 |
 |------|------|------|------|
-| 本地代码 | 有新文档和 SQL 修复待提交/推送 | `git status` 为准 | 完成后需要提交并推送 |
-| GitHub 推送 | 上一轮已推送，当前轮待推送 | `origin/main` 当前落后本地文档状态 | 推送后 Cloudflare 可自动/手动复用固定 Pages 项目 |
+| 本地代码 | 已提交并推送 | `main` 已推送到 `origin/main` | GitHub 包含本轮 SQL 和文档修复 |
+| GitHub 推送 | 已完成 | `git push origin main` 成功 | 远端 `main` 已更新 |
 | Cloudflare Pages | 已重新发布 | Production / branch `main` / source `957aa07` | 固定地址保持 `https://ot-questplatform.pages.dev` |
 | 前端 API 基址 | 已生效 | 线上 `js/app-config.js` 包含 CloudBase API 映射 | Pages 页面默认会请求 CloudBase 后端 |
 | CloudBase 版本 `008` | 100% 流量，状态 normal | CloudBase version list | 当前生产 API 已连接 Supabase |
@@ -233,13 +233,13 @@ https://ot-questplatform.pages.dev
 
 可以把项目状态标记为“完整线上可用”的条件：
 
-- [ ] 最新本地提交已推送到 `origin/main`。
+- [x] 最新本地提交已推送到 `origin/main`。
 - [x] Cloudflare Pages 生产部署已使用本轮静态前端提交。
 - [x] CloudBase Run `ot-questplatform-api-008` 为 100% 流量。
 - [x] `/api/qrcode` 返回 200。
 - [x] `/survey/list` 返回 JSON 成功响应，中文示例标题正常。
 - [x] 登录、创建问卷、启用问卷、填写问卷、提交答卷、查看答卷、二维码功能均通过 API 验收。
 - [x] Supabase 业务表确认位于 `ot_questplatform` schema。
-- [ ] 仓库没有提交 `.env`、token、数据库密码、云平台密钥。
+- [x] 仓库没有提交 `.env`、token、数据库密码、云平台密钥。
 
 这些条件全部满足后，才代表“线上版本所有核心功能都已经跑通”。
