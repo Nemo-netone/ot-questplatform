@@ -36,7 +36,23 @@ https://ot-questplatform.pages.dev/page/login.html?apiBase=https://<cloudbase-ap
 
 该地址会写入浏览器 `localStorage`，后续页面会继续使用这个 API 基址。
 
-## 3. CloudBase Run 后端部署
+## 3. 平台控制台入口
+
+这些地址只用于登录和授权，不在仓库中记录任何 token、数据库密码或云服务密钥。
+
+| 平台 | 用途 | 登录地址 |
+|------|------|----------|
+| Cloudflare Pages | 查看 `ot-questplatform` 静态前端部署、绑定 GitHub 自动发布 | <https://dash.cloudflare.com> |
+| CloudBase / 腾讯云开发 | 部署 Spring Boot 后端服务、配置环境变量、查看服务域名 | <https://console.cloud.tencent.com/tcb> |
+| Supabase | 创建 PostgreSQL 项目、执行初始化 SQL、复制 JDBC 连接信息 | <https://supabase.com/dashboard> |
+
+完整功能上线需要三件事：
+
+1. Supabase 已执行 `docs/database/quest-platform-postgres.sql`。
+2. CloudBase Run 已部署本仓库 Dockerfile 构建出的 Spring Boot API，并配置 `DB_*`、`APP_AUTH_SECRET`、`CORS_ALLOWED_ORIGINS`。
+3. Cloudflare Pages 前端通过 `apiBase` 或 `QUEST_API_BASE_URL` 指向 CloudBase 后端公开域名。
+
+## 4. CloudBase Run 后端部署
 
 后端使用仓库根目录的 `Dockerfile` 构建 Spring Boot 容器。CloudBase Run 需要配置以下环境变量：
 
@@ -55,7 +71,15 @@ Supabase 初始化脚本：
 docs/database/quest-platform-postgres.sql
 ```
 
-## 4. Wrangler 发布命令
+当前本机 CloudBase CLI 尚未登录。可用以下方式授权：
+
+```powershell
+tcb login
+```
+
+或在控制台登录后，通过 CloudBase Run 连接 GitHub 仓库并选择本仓库根目录的 `Dockerfile` 进行云端构建。
+
+## 5. Wrangler 发布命令
 
 凭据只放在本机环境变量或 Cloudflare 控制台，不写入仓库文件。
 
@@ -73,7 +97,7 @@ wrangler pages deploy src/main/resources/static `
 
 如果 Pages 项目已经存在，跳过 `project create`，只执行 `pages deploy`。
 
-## 5. GitHub 连接式发布
+## 6. GitHub 连接式发布
 
 也可以在 Cloudflare Dashboard 中连接 GitHub 仓库：
 
@@ -87,7 +111,7 @@ wrangler pages deploy src/main/resources/static `
 
 这种方式适合长期维护：以后推送到 `main` 后，Cloudflare Pages 会自动重新发布，默认地址仍保持 `https://ot-questplatform.pages.dev`。
 
-## 6. 发布前检查
+## 7. 发布前检查
 
 - [ ] `git status --short --branch` 显示当前分支为 `main`。
 - [ ] `git push` 已把最新提交推到 `origin/main`。
