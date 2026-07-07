@@ -12,11 +12,11 @@
 | 生产分支 | `main` |
 | 发布目录 | `src/main/resources/static` |
 | 已发布地址 | `https://ot-questplatform.pages.dev` |
-| 当前生产部署 | `https://a179036d.ot-questplatform.pages.dev` |
-| 当前部署提交 | `e8952e9c303028bf6a8c8a91e1980ae2917e2a2f` |
-| 部署时间 | 2026-07-07 |
+| 首次发布时间 | 2026-07-07 |
 
 固定地址的关键是：后续不要创建新的 Pages 项目，继续部署到同一个 `ot-questplatform` Pages 项目。Cloudflare Pages 的默认域名由项目名决定，同一个项目重复部署后地址保持不变。
+
+具体某一次部署的短 ID、快照地址和提交号以 Cloudflare Pages 控制台或 `wrangler pages deployment list --project-name ot-questplatform` 为准，不在文档中长期固化，避免记录过期。
 
 ## 2. 部署边界
 
