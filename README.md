@@ -122,7 +122,7 @@ docs/database/quest-platform-postgres.sql
 
 旧版 MySQL 脚本仍保留在 `docs/database/quest-platform.sql`，用于课程资料追溯。当前云部署推荐 PostgreSQL 脚本。脚本会创建并初始化 `user`、`survey`、`question`、`option`、`answer` 表。示例系统账号见 [docs/05-interfaces.md](docs/05-interfaces.md#4-默认示例账号)。
 
-Supabase 中本项目使用独立 schema `ot_questplatform`。该脚本只会在这个 schema 内创建缺失对象和补充缺失的示例数据，不会删除、清空或覆盖已有表数据，也不会清理 `public` schema 或其他项目表。隔离策略见 [docs/supabase-isolation.md](docs/supabase-isolation.md)。
+Supabase 中本项目使用独立 schema `ot_questplatform`。该脚本只会在这个 schema 内创建缺失对象和补充缺失的示例数据，不会删除、清空或覆盖已有表数据，也不会清理 `public` schema 或其他项目表。若历史示例数据已经因编码问题变成 `?`，脚本只会修复固定示例行。隔离策略见 [docs/supabase-isolation.md](docs/supabase-isolation.md)。
 
 ### 3. 配置本地环境变量
 
@@ -196,7 +196,7 @@ http://localhost:8080/index.html
 
 注意：Cloudflare Pages 只托管静态 HTML/CSS/JS，不运行 Spring Boot API。完整业务流程需要把 Java 后端部署到 CloudBase Run，并连接 Supabase PostgreSQL。部署细节见 [docs/deployment.md](docs/deployment.md)。
 
-当前完整线上功能还依赖 CloudBase Run 后端切换到已配置 Supabase 环境变量的版本。当前运行状态、切流步骤和功能验收清单见 [docs/operations-runbook.md](docs/operations-runbook.md)。
+当前线上完整链路已跑通：Cloudflare Pages 固定地址请求 CloudBase Run `ot-questplatform-api-008`，后端通过 Supabase pooler 和专用角色访问 `ot_questplatform` schema。当前运行状态和功能验收清单见 [docs/operations-runbook.md](docs/operations-runbook.md)。
 
 线上 Pages 域名 `https://ot-questplatform.pages.dev` 会在 `src/main/resources/static/js/app-config.js` 中自动使用 CloudBase API：
 
@@ -213,7 +213,7 @@ https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com
 | 环境变量 | 默认值 | 敏感 | 说明 |
 |----------|--------|------|------|
 | `DB_URL` | 本机 PostgreSQL JDBC | 否 | PostgreSQL/Supabase JDBC 地址 |
-| `DB_USERNAME` | `postgres` | 否 | PostgreSQL/Supabase 用户名 |
+| `DB_USERNAME` | `postgres` | 否 | PostgreSQL/Supabase 用户名；Supabase pooler 常用 `<role>.<project-ref>` |
 | `DB_PASSWORD` | 空 | 是 | PostgreSQL/Supabase 密码 |
 | `DB_SSLMODE` | `prefer` | 否 | PostgreSQL SSL 模式；Supabase 线上建议 `require` |
 | `DB_SCHEMA` | `ot_questplatform` | 否 | PostgreSQL schema；线上隔离本项目数据 |

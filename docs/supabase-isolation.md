@@ -31,7 +31,8 @@ DB_SCHEMA=ot_questplatform
 - `CREATE SCHEMA IF NOT EXISTS ot_questplatform`
 - `CREATE TABLE IF NOT EXISTS ...`
 - `CREATE INDEX IF NOT EXISTS ...`
-- `INSERT ... ON CONFLICT DO NOTHING`
+- `INSERT ... ON CONFLICT DO NOTHING` 或受限 `ON CONFLICT DO UPDATE`
+- 对固定示例行执行受限修复：仅当文本已经变成 `?` 或替换字符时，才用脚本里的中文样例文本修复
 - 根据已有最大 ID 修正序列值
 
 脚本不会做这些事：
@@ -48,10 +49,20 @@ DB_SCHEMA=ot_questplatform
 线上后端推荐使用专用数据库角色，例如：
 
 ```text
-quest_app
+ot_questplatform_app
 ```
 
 这个角色只应拥有 `ot_questplatform` schema 的使用权、表权限和序列权限，不授予它管理 `public` schema 或其他业务 schema 的权限。这样即使应用配置写错，也能降低误操作范围。
+
+如果后端通过 Supabase pooler 连接，用户名通常不是单独的角色名，而是：
+
+```text
+ot_questplatform_app.<project-ref>
+```
+
+线上当前采用这种形式。角色密码只放在 CloudBase Run 环境变量，不写入仓库。
+
+Supabase 表如果启用了 RLS，需要为该专用角色单独配置 policy。本项目线上只在 `ot_questplatform` 的五张表上配置了 `ot_questplatform_app_all` policy，不修改 `public` schema 的 RLS、策略或权限。
 
 ## 5. 操作前检查
 
@@ -74,3 +85,13 @@ Cloudflare Pages static pages
 ```
 
 这条链路的关键点是：前端不直接连数据库，后端不使用默认 `public`，数据库用户不应拥有其他项目 schema 的写权限。
+
+## 7. 当前线上隔离状态
+
+截至 2026-07-07：
+
+- Supabase 项目中 `public` schema 仍保留其他项目表，本项目不写入 `public`。
+- 本项目业务表位于 `ot_questplatform`，包含 `user`、`survey`、`question`、`option`、`answer`。
+- CloudBase Run 使用专用角色 `ot_questplatform_app.<project-ref>` 连接 Supabase pooler。
+- RLS policy 只授予 `ot_questplatform_app` 访问本项目五张表。
+- 线上 API 已验证 `/survey/list`、`/user/login`、`/survey/edit`、`/survey/updateStatus`、`/answer/add`、`/answer/list`、`/api/qrcode`。

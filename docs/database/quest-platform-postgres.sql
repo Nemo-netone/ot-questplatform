@@ -1,6 +1,8 @@
 -- Quest Survey Platform PostgreSQL schema for Supabase.
 -- Safe initializer: creates this project's own schema and missing objects only.
 -- It does not drop tables, truncate data, or touch the public schema.
+-- Existing sample rows are updated only when their text is already corrupted
+-- into '?' or replacement characters, so normal data is preserved.
 
 CREATE SCHEMA IF NOT EXISTS ot_questplatform;
 SET search_path TO ot_questplatform;
@@ -64,7 +66,9 @@ VALUES
   (2, '客户满意度调查', 0, '2025-08-19 10:00:00+08', 'admin', 0),
   (3, '2025年员工满意度调查', 1, '2025-08-20 09:15:00+08', 'hr_admin', 0),
   (4, '智能手机使用习惯调查', 1, '2025-08-21 13:00:00+08', 'marketing', 0)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET title = EXCLUDED.title
+WHERE survey.title LIKE '%?%' OR survey.title LIKE '%�%';
 
 INSERT INTO question (id, survey_id, title, create_time, "type")
 VALUES
@@ -83,7 +87,9 @@ VALUES
   (18, 4, '您最常使用的手机功能有哪些？（可多选）', '2025-08-21 13:00:00+08', 'checkbox'),
   (19, 4, '您购买手机时最看重的因素是？', '2025-08-21 13:00:00+08', 'select'),
   (20, 4, '您对目前使用的手机有什么不满意的地方？', '2025-08-21 13:00:00+08', 'textarea')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET title = EXCLUDED.title
+WHERE question.title LIKE '%?%' OR question.title LIKE '%�%';
 
 INSERT INTO "option" (id, question_id, survey_id, content, create_time, option_id)
 VALUES
@@ -138,7 +144,9 @@ VALUES
   (55, 19, 4, '性能', '2025-08-21 13:00:00+08', 2),
   (56, 19, 4, '外观设计', '2025-08-21 13:00:00+08', 3),
   (57, 19, 4, '摄像头质量', '2025-08-21 13:00:00+08', 4)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET content = EXCLUDED.content
+WHERE "option".content LIKE '%?%' OR "option".content LIKE '%�%';
 
 INSERT INTO answer (id, source_type, source_ip, answer, survey_id, create_time)
 VALUES
@@ -150,7 +158,9 @@ VALUES
   (7, 1, '172.56.23.89', '[{"question":"您目前使用的手机品牌是？","answer":"Apple"},{"question":"您每天使用手机的时间大约是？","answer":"3-5小时"},{"question":"您最常使用的手机功能有哪些？（可多选）","answer":"社交媒体,视频/音乐,购物"},{"question":"您购买手机时最看重的因素是？","answer":"性能"},{"question":"您对目前使用的手机有什么不满意的地方？","answer":"电池续航时间不够长"}]', 4, '2025-08-21 14:30:45+08'),
   (8, 1, '172.56.24.12', '[{"question":"您目前使用的手机品牌是？","answer":"Samsung"},{"question":"您每天使用手机的时间大约是？","answer":"5小时以上"},{"question":"您最常使用的手机功能有哪些？（可多选）","answer":"游戏,视频/音乐"},{"question":"您购买手机时最看重的因素是？","answer":"摄像头质量"},{"question":"您对目前使用的手机有什么不满意的地方？","answer":"偶尔会卡顿"}]', 4, '2025-08-21 16:45:22+08'),
   (9, 2, '203.45.67.89', '[{"question":"您目前使用的手机品牌是？","answer":"Huawei"},{"question":"您每天使用手机的时间大约是？","answer":"1-3小时"},{"question":"您最常使用的手机功能有哪些？（可多选）","answer":"工作/学习"},{"question":"您购买手机时最看重的因素是？","answer":"价格"},{"question":"您对目前使用的手机有什么不满意的地方？","answer":"应用商店可选应用较少"}]', 4, '2025-08-21 18:20:33+08')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET answer = EXCLUDED.answer
+WHERE answer.answer LIKE '%?%' OR answer.answer LIKE '%�%';
 
 SELECT setval(pg_get_serial_sequence('ot_questplatform."user"', 'id'), COALESCE((SELECT MAX(id) FROM "user"), 1), true);
 SELECT setval(pg_get_serial_sequence('ot_questplatform.survey', 'id'), COALESCE((SELECT MAX(id) FROM survey), 1), true);

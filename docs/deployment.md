@@ -20,6 +20,8 @@
 
 最近一次已验证的静态前端发布：2026-07-07 13:13，北京时间，Production / `main` / source `957aa07`，快照地址为 `https://439b972e.ot-questplatform.pages.dev`。默认生产地址仍是 `https://ot-questplatform.pages.dev`。
 
+最近一次已验证的后端生产发布：2026-07-07 13:39，北京时间，CloudBase Run `ot-questplatform-api-008`，100% 流量，状态 `normal`。
+
 ## 2. 部署边界
 
 Cloudflare Pages 发布后可以打开静态页面，例如：
@@ -67,7 +69,7 @@ https://ot-questplatform.pages.dev/page/login.html?apiBase=https://<cloudbase-ap
 | 环境变量 | 说明 |
 |----------|------|
 | `DB_URL` | Supabase PostgreSQL JDBC 地址，不在这里拼接 query 参数 |
-| `DB_USERNAME` | Supabase 数据库用户名 |
+| `DB_USERNAME` | Supabase 数据库用户名；使用 pooler 时格式通常是 `<role>.<project-ref>` |
 | `DB_PASSWORD` | Supabase 数据库密码 |
 | `DB_SSLMODE` | Supabase 线上建议 `require` |
 | `DB_SCHEMA` | 本项目固定使用 `ot_questplatform` |
@@ -84,31 +86,34 @@ https://ot-questplatform.pages.dev/page/login.html?apiBase=https://<cloudbase-ap
 | 容器端口 | `8080` |
 | 公开 API 基址 | `https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com` |
 
-当前版本状态（最近核对：2026-07-07 13:08，北京时间）：
+当前版本状态（最近核对：2026-07-07 13:40，北京时间）：
 
 | 版本 | 流量 | 状态 | 说明 |
 |------|------|------|------|
-| `ot-questplatform-api-001` | 100% | normal | 当前线上流量版本；未注入数据库环境变量，会回落到 `localhost:5432`，数据库接口会 500 |
+| `ot-questplatform-api-001` | 0% | normal | 初始版本；未注入数据库环境变量，会回落到 `localhost:5432`，保留作问题对照 |
 | `ot-questplatform-api-002` | 0% | normal | 历史构建版本，保留作镜像来源/回溯 |
-| `ot-questplatform-api-005` | 0% | normal | 已注入 Supabase/`ot_questplatform` 环境变量，目标切流版本 |
+| `ot-questplatform-api-005` | 0% | normal | 历史镜像版本 |
+| `ot-questplatform-api-006` | 0% | normal | 历史镜像版本 |
+| `ot-questplatform-api-007` | 0% | normal | 已验证镜像发布链路，数据库用户名格式不适合 pooler |
+| `ot-questplatform-api-008` | 100% | normal | 当前生产版本；使用 Supabase pooler、专用角色和 `ot_questplatform` schema |
 
-CloudBase CLI 在当前旧版 CloudBase Run 环境中可以创建和查询版本，但流量切换不可靠。已经验证过的失败现象包括：
+CloudBase 旧版 CLI/API 流量切换不可靠，已验证过的失败现象包括：
 
 - `ModifyCloudBaseRunServerFlowConf` 返回 `InvalidParameter.ServiceNotExist`。
 - `cloudrun traffic` 要求存在正在进行的灰度发布版本，但当前发布单记录的 release version 不是 `005`。
 - 直接 `ReleaseGray` 指向 `005` 返回服务状态异常。
 
-因此当前需要在控制台把 `ot-questplatform-api-005` 切到 100% 流量：
+最终采用新版 `tcbr.UpdateCloudRunServer` 全量发布镜像，并注入环境变量，生成 `ot-questplatform-api-008` 作为当前生产版本。控制台入口：
 
 ```text
 https://tcb.cloud.tencent.com/dev?envId=meta-d5gh4ds014005aff1#/platform-run/service/detail?serverName=ot-questplatform-api&tabId=deploy&envId=meta-d5gh4ds014005aff1
 ```
 
-控制台操作建议：
+控制台核对建议：
 
 1. 打开 CloudBase Run 服务 `ot-questplatform-api` 的版本/发布页面。
-2. 将版本 `ot-questplatform-api-005` 发布为全量版本或调整到 100% 流量。
-3. 保留 `ot-questplatform-api-001` 作为临时回滚点，确认验证通过后再清理旧版本。
+2. 确认版本 `ot-questplatform-api-008` 为 100% 流量。
+3. 保留旧版本作为临时回滚点，确认长期稳定后再决定是否清理。
 
 更完整的排障路径和逐项验收见 [operations-runbook.md](operations-runbook.md)。
 
@@ -120,14 +125,20 @@ Supabase 初始化脚本：
 docs/database/quest-platform-postgres.sql
 ```
 
-该脚本会创建并使用独立 schema `ot_questplatform`，只在这个 schema 内创建缺失对象和补充缺失的示例数据。脚本不包含 `DROP TABLE`、`TRUNCATE` 或 `DROP SCHEMA`，不会清理 `public` schema、其他 schema 或其他项目表。更完整的数据隔离说明见 `docs/supabase-isolation.md`。
+该脚本会创建并使用独立 schema `ot_questplatform`，只在这个 schema 内创建缺失对象和补充缺失的示例数据。脚本不包含 `DROP TABLE`、`TRUNCATE` 或 `DROP SCHEMA`，不会清理 `public` schema、其他 schema 或其他项目表。若历史示例文本已经被错误编码成 `?` 或替换字符，脚本只会修复固定示例行的文本，不覆盖正常数据。更完整的数据隔离说明见 `docs/supabase-isolation.md`。
 
-Supabase 平台 access token 只能管理项目，不能替代 PostgreSQL 数据库密码。完整上线前必须在 Supabase Dashboard 的数据库设置页复制或重置数据库密码，或创建专用数据库角色，并把该密码配置到 CloudBase Run 的 `DB_PASSWORD`。
+线上已创建专用数据库角色 `ot_questplatform_app`，只授权 `ot_questplatform` schema 的表和序列。由于 Supabase pooler 用户名需要携带 project ref，CloudBase Run 中使用的 `DB_USERNAME` 形态是：
+
+```text
+ot_questplatform_app.<project-ref>
+```
+
+Supabase 平台 access token 可以通过 Management API 执行项目管理和 SQL 操作，但不要把它当成应用运行时密码。应用运行时应使用专用数据库角色密码，并只放在 CloudBase Run 环境变量里。
 
 推荐 CloudBase Run 部署命令：
 
 ```powershell
-$env:DB_PASSWORD="<supabase-database-password>"
+$env:DB_PASSWORD="<dedicated-role-password>"
 $env:APP_AUTH_SECRET="<long-random-secret>"
 
 tcb run deploy `
@@ -137,7 +148,7 @@ tcb run deploy `
   --containerPort 8080 `
   --override `
   --noConfirm `
-  --envParams "DB_URL=jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres&DB_USERNAME=quest_app&DB_PASSWORD=$env:DB_PASSWORD&DB_SSLMODE=require&DB_SCHEMA=ot_questplatform&APP_AUTH_SECRET=$env:APP_AUTH_SECRET&APP_AUTH_TOKEN_TTL_SECONDS=86400&CORS_ALLOWED_ORIGINS=https://ot-questplatform.pages.dev" `
+  --envParams "DB_URL=jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres&DB_USERNAME=ot_questplatform_app.<project-ref>&DB_PASSWORD=$env:DB_PASSWORD&DB_SSLMODE=require&DB_SCHEMA=ot_questplatform&APP_AUTH_SECRET=$env:APP_AUTH_SECRET&APP_AUTH_TOKEN_TTL_SECONDS=86400&CORS_ALLOWED_ORIGINS=https://ot-questplatform.pages.dev" `
   --remark "quest platform production api" `
   --json
 ```
@@ -151,7 +162,7 @@ Invoke-WebRequest -Uri 'https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.ap
 Invoke-WebRequest -Uri 'https://meta-d5gh4ds014005aff1-1369167244.ap-shanghai.app.tcloudbase.com/survey/list?isDelete=0&title=&page=1&pageSize=5' -UseBasicParsing
 ```
 
-其中 `/api/qrcode` 只验证服务可访问；`/survey/list` 会真实访问 Supabase，是判断数据库环境变量是否生效的关键接口。
+其中 `/api/qrcode` 只验证服务可访问；`/survey/list` 会真实访问 Supabase，是判断数据库环境变量是否生效的关键接口。2026-07-07 已验证 `/api/qrcode`、`/survey/list`、`/user/login` 和一次可回收的问卷创建/启用/答卷/查询/删除/恢复流程均成功。
 
 ## 5. Wrangler 发布命令
 

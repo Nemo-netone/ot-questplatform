@@ -1,3 +1,9 @@
+-- WARNING:
+-- This is the original MySQL course dump. It contains DROP TABLE statements
+-- and is kept only for historical/local MySQL reference.
+-- Do not run this file in Supabase or any shared database.
+-- Use docs/database/quest-platform-postgres.sql for the online deployment.
+
 -- MySQL dump 10.13  Distrib 8.0.41, for Linux (aarch64)
 --
 -- Host: localhost    Database: quest-platform
