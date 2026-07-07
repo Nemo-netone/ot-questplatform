@@ -2,6 +2,28 @@
 
 一个基于 Spring Boot、MyBatis、PostgreSQL/Supabase 和 Layui 的问卷管理平台，覆盖后台登录、问卷创建、问卷发布、链接/二维码分享、在线填写和答卷查看。前端可部署到 Cloudflare Pages，后端可部署到 CloudBase Run，数据库可使用 Supabase PostgreSQL。
 
+## 在线演示
+
+| 项目 | 地址 / 信息 |
+|------|-------------|
+| GitHub 仓库 | <https://github.com/Nemo-netone/ot-questplatform> |
+| 在线演示地址 | <https://ot-questplatform.pages.dev> |
+| 后台登录入口 | <https://ot-questplatform.pages.dev/page/login> |
+| 演示账号 | `admin` |
+| 演示密码 | `123456` |
+
+可演示功能：
+
+- 后台登录、退出和 token 鉴权。
+- 问卷列表、标题搜索、分页查看。
+- 创建问卷，支持 text、textarea、select、radio、checkbox 等题型。
+- 编辑未启用问卷，启用、停用、逻辑删除和恢复问卷。
+- 公开填写已启用问卷并提交答卷。
+- 后台查看答卷列表和答题内容。
+- 根据问卷链接生成二维码，适合扫码填写场景。
+
+演示环境用于项目展示和学习验证，请不要提交真实个人信息或敏感业务数据。
+
 ## 系统总览
 
 ```text
