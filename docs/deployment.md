@@ -11,7 +11,7 @@
 | Pages 项目名 | `ot-questplatform` |
 | 生产分支 | `main` |
 | 发布目录 | `src/main/resources/static` |
-| 稳定默认地址 | `https://ot-questplatform.pages.dev` |
+| 目标默认地址 | `https://ot-questplatform.pages.dev` |
 
 固定地址的关键是：后续不要创建新的 Pages 项目，继续部署到同一个 `ot-questplatform` Pages 项目。Cloudflare Pages 的默认域名由项目名决定，同一个项目重复部署后地址保持不变。
 
@@ -67,4 +67,3 @@ wrangler pages deploy src/main/resources/static `
 - [ ] Pages 项目名仍为 `ot-questplatform`。
 - [ ] 发布目录仍为 `src/main/resources/static`。
 - [ ] 仓库没有提交 `.env`、token、数据库密码或云服务密钥。
-

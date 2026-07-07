@@ -168,7 +168,7 @@ http://localhost:8080/index.html
 | Pages 项目名 | `ot-questplatform` |
 | 生产分支 | `main` |
 | 发布目录 | `src/main/resources/static` |
-| 默认地址 | `https://ot-questplatform.pages.dev` |
+| 目标默认地址 | `https://ot-questplatform.pages.dev` |
 
 注意：Cloudflare Pages 只托管静态 HTML/CSS/JS，不运行 Spring Boot API。完整业务流程仍需要单独运行 Java 后端、MySQL 和 Redis。部署细节见 [docs/deployment.md](docs/deployment.md)。
 
